@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Mail, MapPin, Phone, Store } from "lucide-react";
+import { Banknote, Mail, MapPin, Phone } from "lucide-react";
+import { showComingSoon } from "@/components/coming-soon";
 
 function FacebookIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -31,6 +32,30 @@ function XIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+/** Alipay mark — the brand's blue tile with its 支 glyph. */
+function AlipayMark() {
+  return (
+    <span
+      aria-hidden
+      className="flex h-6 w-6 items-center justify-center rounded-md bg-[#1677ff] text-[13px] font-bold leading-none text-white"
+    >
+      支
+    </span>
+  );
+}
+
+/** WeChat Pay mark — two overlapping chat bubbles on the brand green tile. */
+function WechatMark() {
+  return (
+    <span aria-hidden className="flex h-6 w-6 items-center justify-center rounded-md bg-[#07c160]">
+      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="#ffffff">
+        <path d="M9.2 4C5.6 4 2.7 6.3 2.7 9.1c0 1.6.9 3 2.4 4l-.6 1.9 2.2-1.1c.8.2 1.6.4 2.5.4h.5a4.6 4.6 0 0 1-.2-1.3c0-2.7 2.7-4.9 6-4.9h.5C15.5 5.6 12.6 4 9.2 4zm-2.4 3.4a.9.9 0 1 1 0 1.8.9.9 0 0 1 0-1.8zm4.8 0a.9.9 0 1 1 0 1.8.9.9 0 0 1 0-1.8z" />
+        <path d="M21.3 13c0-2.3-2.3-4.2-5.1-4.2S11 10.7 11 13s2.3 4.2 5.2 4.2c.6 0 1.2-.1 1.7-.3l1.8.9-.5-1.5c1.2-.8 2.1-2 2.1-3.3zm-6.8-1.1a.8.8 0 1 1 0 1.6.8.8 0 0 1 0-1.6zm3.4 0a.8.8 0 1 1 0 1.6.8.8 0 0 1 0-1.6z" />
+      </svg>
+    </span>
+  );
+}
+
 export function SiteFooter() {
   const pathname = usePathname();
   const [year, setYear] = useState("");
@@ -42,37 +67,59 @@ export function SiteFooter() {
   if (pathname?.startsWith("/admin")) return null;
 
   return (
-    <footer className="mt-16 border-t border-gray-100 bg-brand-text text-white">
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-4">
+    <footer className="bg-footer-gradient mt-12 border-t border-white/10 text-white">
+      <div className="mx-auto grid max-w-7xl gap-8 px-4 py-9 sm:px-6 sm:py-10 md:grid-cols-4">
         <div>
           <Link href="/" className="flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10">
-              <Store className="h-5 w-5 text-white" />
-            </span>
-            <span className="font-heading text-xl font-bold">
+            <img
+              src="/stylehub-icon.png"
+              alt=""
+              width={32}
+              height={32}
+              className="h-8 w-8 rounded-full object-cover"
+            />
+            <span className="font-heading text-lg font-bold">
               NCWU <span className="text-secondary">StyleHub</span>
             </span>
           </Link>
-          <p className="mt-4 text-sm leading-relaxed text-brand-tint/80">
+          <p className="mt-3 text-sm leading-relaxed text-white/75">
             Modern clothes for every occasion. Quality fabrics, honest prices and a shopping
             experience you will love.
           </p>
-          <div className="mt-5 flex gap-3">
-            <a href="#" aria-label="Facebook" className="rounded-full bg-white/10 p-2.5 transition-colors hover:bg-primary">
+          <div className="mt-4 flex gap-2.5">
+            <button
+              type="button"
+              onClick={() => showComingSoon("Facebook page")}
+              aria-label="Facebook (coming soon)"
+              title="Coming soon"
+              className="cursor-pointer rounded-full bg-white/10 p-2 transition-colors hover:bg-primary"
+            >
               <FacebookIcon className="h-4 w-4" />
-            </a>
-            <a href="#" aria-label="Instagram" className="rounded-full bg-white/10 p-2.5 transition-colors hover:bg-primary">
+            </button>
+            <button
+              type="button"
+              onClick={() => showComingSoon("Instagram page")}
+              aria-label="Instagram (coming soon)"
+              title="Coming soon"
+              className="cursor-pointer rounded-full bg-white/10 p-2 transition-colors hover:bg-primary"
+            >
               <InstagramIcon className="h-4 w-4" />
-            </a>
-            <a href="#" aria-label="X (Twitter)" className="rounded-full bg-white/10 p-2.5 transition-colors hover:bg-primary">
+            </button>
+            <button
+              type="button"
+              onClick={() => showComingSoon("X page")}
+              aria-label="X (coming soon)"
+              title="Coming soon"
+              className="cursor-pointer rounded-full bg-white/10 p-2 transition-colors hover:bg-primary"
+            >
               <XIcon className="h-4 w-4" />
-            </a>
+            </button>
           </div>
         </div>
 
         <div>
-          <h3 className="font-heading text-sm font-semibold uppercase tracking-wider text-white/90">Shop</h3>
-          <ul className="mt-4 space-y-2.5 text-sm text-brand-tint/80">
+          <h3 className="font-heading text-xs font-semibold uppercase tracking-wider text-white/90">Shop</h3>
+          <ul className="mt-3 space-y-2 text-sm text-white/75">
             <li><Link href="/shop" className="cursor-pointer transition-colors hover:text-white">All Products</Link></li>
             <li><Link href="/shop?category=t-shirts" className="cursor-pointer transition-colors hover:text-white">T-Shirts</Link></li>
             <li><Link href="/shop?category=dresses" className="cursor-pointer transition-colors hover:text-white">Dresses</Link></li>
@@ -82,43 +129,66 @@ export function SiteFooter() {
         </div>
 
         <div>
-          <h3 className="font-heading text-sm font-semibold uppercase tracking-wider text-white/90">Help</h3>
-          <ul className="mt-4 space-y-2.5 text-sm text-brand-tint/80">
+          <h3 className="font-heading text-xs font-semibold uppercase tracking-wider text-white/90">Help</h3>
+          <ul className="mt-3 space-y-2 text-sm text-white/75">
             <li><Link href="/orders" className="cursor-pointer transition-colors hover:text-white">Order Tracking</Link></li>
             <li><Link href="/account" className="cursor-pointer transition-colors hover:text-white">My Account</Link></li>
-            <li><span className="cursor-pointer transition-colors hover:text-white">Shipping &amp; Returns</span></li>
-            <li><span className="cursor-pointer transition-colors hover:text-white">FAQ</span></li>
-            <li><span className="cursor-pointer transition-colors hover:text-white">Privacy Policy</span></li>
+            <li><Link href="/wishlist" className="cursor-pointer transition-colors hover:text-white">Saved Items</Link></li>
+            <li><Link href="/help/shipping-returns" className="cursor-pointer transition-colors hover:text-white">Shipping &amp; Returns</Link></li>
+            <li><Link href="/help/faq" className="cursor-pointer transition-colors hover:text-white">FAQ</Link></li>
+            <li><Link href="/help/terms" className="cursor-pointer transition-colors hover:text-white">Terms of Service</Link></li>
+            <li><Link href="/help/privacy" className="cursor-pointer transition-colors hover:text-white">Privacy Policy</Link></li>
+            <li><Link href="/help/contact" className="cursor-pointer transition-colors hover:text-white">Contact Us</Link></li>
           </ul>
         </div>
 
         <div>
-          <h3 className="font-heading text-sm font-semibold uppercase tracking-wider text-white/90">Contact</h3>
-          <ul className="mt-4 space-y-3 text-sm text-brand-tint/80">
+          <h3 className="font-heading text-xs font-semibold uppercase tracking-wider text-white/90">Contact</h3>
+          <ul className="mt-3 space-y-2.5 text-sm text-white/75">
             <li className="flex items-start gap-2.5">
               <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-secondary" />
-              <span>123 Fashion Avenue, Zhengzhou, Henan, China</span>
+              <span>NCWU Business Street, F1 2nd Floor, Zhengzhou, Henan, China</span>
             </li>
             <li className="flex items-center gap-2.5">
               <Phone className="h-4 w-4 shrink-0 text-secondary" />
-              <span>+86 138 0000 0000</span>
+              <button
+                type="button"
+                onClick={() => showComingSoon("Phone support")}
+                title="Coming soon"
+                className="cursor-pointer transition-colors hover:text-white"
+              >
+                +86 138 0000 0000
+              </button>
             </li>
             <li className="flex items-center gap-2.5">
               <Mail className="h-4 w-4 shrink-0 text-secondary" />
-              <span>support@ncwustylehub.com</span>
+              <a href="mailto:info@shop.ncwu.site" className="transition-colors hover:text-white">
+                info@shop.ncwu.site
+              </a>
             </li>
           </ul>
         </div>
       </div>
 
       <div className="border-t border-white/10">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 py-5 text-xs text-brand-tint/70 sm:flex-row sm:px-6">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 py-4 text-xs text-white/60 sm:flex-row sm:px-6">
           <p>© {year} NCWU StyleHub. All rights reserved.</p>
-          <p className="flex items-center gap-4">
-            <span>Alipay</span>
-            <span>WeChat Pay</span>
-            <span>Cash on Delivery</span>
-          </p>
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <span className="inline-flex items-center gap-1.5" title="Alipay">
+              <AlipayMark />
+              <span>Alipay</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5" title="WeChat Pay">
+              <WechatMark />
+              <span>WeChat Pay</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5" title="Cash on Delivery">
+              <span className="flex h-6 w-6 items-center justify-center rounded-md bg-white/15">
+                <Banknote className="h-3.5 w-3.5 text-white" aria-hidden />
+              </span>
+              <span>Cash on Delivery</span>
+            </span>
+          </div>
         </div>
       </div>
     </footer>

@@ -40,6 +40,10 @@ export interface Product {
   images: ProductImage[];
   avg_rating: number;
   review_count: number;
+  /** Comma-separated size options (e.g. "S,M,L,XL" or "38,39,40,41"); empty = no sizes. */
+  sizes: string;
+  /** Purchase cost per unit. Only returned on admin endpoints — absent in the public catalog. */
+  cost_price?: number | null;
 }
 
 export interface Review {
@@ -60,6 +64,8 @@ export interface OrderItem {
   unit_price: number;
   quantity: number;
   product_image: string;
+  /** Chosen size for this line; null/empty when the product has no sizes. */
+  size: string | null;
 }
 
 export interface Order {
@@ -75,6 +81,9 @@ export interface Order {
   items: OrderItem[];
   /** Shipping fee included in `total` (0 when free). */
   shipping: number;
+  tracking_number: string | null;
+  /** Last status / tracking change (ISO string). Falls back to created_at on older orders. */
+  updated_at?: string | null;
 }
 
 export interface Banner {
@@ -107,6 +116,68 @@ export interface AdminStats {
   low_stock: number;
 }
 
+/* ---------- Admin analytics (computed server-side from real orders) ---------- */
+
+export interface AnalyticsPoint {
+  date: string;
+  revenue: number;
+  profit: number;
+  orders: number;
+}
+
+export interface AnalyticsProduct {
+  name: string;
+  units: number;
+  revenue: number;
+  profit: number;
+}
+
+export interface AnalyticsTotals {
+  revenue: number;
+  profit: number;
+  avg_order: number;
+  orders: number;
+  units: number;
+}
+
+export interface StatusSlice {
+  status: string;
+  count: number;
+}
+
+export interface AdminAnalytics {
+  days: number;
+  totals: AnalyticsTotals;
+  series: AnalyticsPoint[];
+  top_products: AnalyticsProduct[];
+  status_counts: StatusSlice[];
+  products: number;
+  users: number;
+  low_stock: number;
+  pending_reviews: number;
+  subscribers: number;
+}
+
+/** NCWU StyleHub Club member (newsletter). */
+export interface Subscriber {
+  id: number;
+  email: string;
+  source: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+/** Message sent through the public contact form. */
+export interface ContactMessage {
+  id: number;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  is_read: boolean;
+  created_at: string;
+}
+
 export interface AuthPayload {
   access_token: string;
   token_type: string;
@@ -116,4 +187,6 @@ export interface AuthPayload {
 export interface CartLine {
   product: Product;
   quantity: number;
+  /** Chosen size; "" when the product has no sizes. Same product + different size = separate lines. */
+  size: string;
 }

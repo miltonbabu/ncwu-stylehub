@@ -4,7 +4,8 @@ import { ReviewSection } from "@/components/review-section";
 import { StarRating } from "@/components/star-rating";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { api } from "@/lib/api";
+import { addWishlist, api, fetchWishlist, removeWishlist } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 import { useCart } from "@/lib/cart-context";
 import type { Product } from "@/lib/types";
 import { cn, formatPrice, imgFallback } from "@/lib/utils";
@@ -17,11 +18,16 @@ export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { add } = useCart();
+  const { user, ready: authReady } = useAuth();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [qty, setQty] = useState(1);
+  const [size, setSize] = useState("");
+  const [sizeError, setSizeError] = useState(false);
   const [activeImage, setActiveImage] = useState("");
   const [added, setAdded] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [savingWish, setSavingWish] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -34,6 +40,13 @@ export default function ProductDetailPage() {
       .catch(() => setProduct(null))
       .finally(() => setLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    if (!authReady || !user || !id) return;
+    fetchWishlist()
+      .then((list) => setSaved(list.some((p) => String(p.id) === id)))
+      .catch(() => setSaved(false));
+  }, [authReady, user, id]);
 
   if (loading) {
     return (
@@ -69,15 +82,49 @@ export default function ProductDetailPage() {
       ? Math.round(((product.compare_at_price - product.price) / product.compare_at_price) * 100)
       : 0;
 
+  const sizeOptions = (product.sizes ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
   const addToCart = () => {
-    add(product, qty);
+    if (sizeOptions.length > 0 && !size) {
+      setSizeError(true);
+      return;
+    }
+    add(product, qty, size);
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
   };
 
   const buyNow = () => {
-    add(product, qty);
+    if (sizeOptions.length > 0 && !size) {
+      setSizeError(true);
+      return;
+    }
+    add(product, qty, size);
     router.push("/checkout");
+  };
+
+  const toggleWishlist = async () => {
+    if (!user) {
+      router.push(`/auth/sign-in?next=/product/${id}`);
+      return;
+    }
+    setSavingWish(true);
+    try {
+      if (saved) {
+        await removeWishlist(product.id);
+        setSaved(false);
+      } else {
+        await addWishlist(product.id);
+        setSaved(true);
+      }
+    } catch {
+      window.alert("Could not update your saved items. Please try again.");
+    } finally {
+      setSavingWish(false);
+    }
   };
 
   return (
@@ -173,6 +220,38 @@ export default function ProductDetailPage() {
             </Badge>
           </div>
 
+          {sizeOptions.length > 0 && (
+            <div>
+              <p className="text-sm font-semibold text-brand-text">
+                Size{size ? <span className="ml-2 font-normal text-gray-500">{size}</span> : null}
+              </p>
+              <div className="mt-2.5 flex flex-wrap gap-2">
+                {sizeOptions.map((opt) => (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => {
+                      setSize(opt);
+                      setSizeError(false);
+                    }}
+                    aria-pressed={size === opt}
+                    className={cn(
+                      "cursor-pointer rounded-full border px-4 py-2 text-sm font-medium transition-all duration-200",
+                      size === opt
+                        ? "border-primary bg-primary text-white shadow-md shadow-primary/20"
+                        : "border-gray-200 text-gray-600 hover:border-primary hover:text-primary",
+                    )}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+              {sizeError && (
+                <p className="mt-2 text-sm text-red-600">Please select a size before adding to cart.</p>
+              )}
+            </div>
+          )}
+
           <div className="flex items-center gap-4">
             <div className="flex items-center rounded-full border border-gray-200">
               <button
@@ -202,10 +281,18 @@ export default function ProductDetailPage() {
             </Button>
             <button
               type="button"
-              className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border border-gray-200 text-gray-400 transition-colors hover:border-red-300 hover:text-red-500"
-              aria-label="Add to wishlist"
+              onClick={toggleWishlist}
+              disabled={savingWish}
+              className={cn(
+                "flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border transition-colors",
+                saved
+                  ? "border-red-300 bg-red-50 text-red-500"
+                  : "border-gray-200 text-gray-400 hover:border-red-300 hover:text-red-500",
+                savingWish && "opacity-60",
+              )}
+              aria-label={saved ? "Remove from wishlist" : "Add to wishlist"}
             >
-              <Heart className="h-5 w-5" />
+              <Heart className={cn("h-5 w-5", saved && "fill-current")} />
             </button>
           </div>
 

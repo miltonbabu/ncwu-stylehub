@@ -25,7 +25,8 @@ function ProductSkeleton() {
 export default function HomePage() {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [featured, setFeatured] = useState<Product[]>([]);
+  const [newArrivals, setNewArrivals] = useState<Product[]>([]);
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -33,16 +34,19 @@ export default function HomePage() {
     let cancelled = false;
     (async () => {
       try {
-        const [b, c, p, pr] = await Promise.all([
+        // Ordering and filtering happen in the database — no client-side "showing" algorithm.
+        const [b, c, f, n, pr] = await Promise.all([
           api<Banner[]>("/banners").catch(() => [] as Banner[]),
           api<Category[]>("/categories").catch(() => [] as Category[]),
-          api<Product[]>("/products?page_size=16&sort=newest").catch(() => [] as Product[]),
+          api<Product[]>("/products?featured=true&page_size=8&sort=newest").catch(() => [] as Product[]),
+          api<Product[]>("/products?page_size=4&sort=newest").catch(() => [] as Product[]),
           api<Promotion[]>("/promotions").catch(() => [] as Promotion[]),
         ]);
         if (!cancelled) {
           setBanners(b);
           setCategories(c);
-          setProducts(p);
+          setFeatured(f);
+          setNewArrivals(n);
           setPromotions(pr);
         }
       } finally {
@@ -53,11 +57,6 @@ export default function HomePage() {
       cancelled = true;
     };
   }, []);
-
-  const featured = products.filter((p) => p.is_featured).slice(0, 8);
-  const newArrivals = [...products].sort(
-    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-  ).slice(0, 4);
 
   return (
     <div className="pb-4">

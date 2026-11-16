@@ -1,6 +1,7 @@
 "use client";
 
 import { getSeasonalPromo } from "@/lib/seasonal";
+import { subscribeToClub } from "@/lib/api";
 import type { Category, Promotion } from "@/lib/types";
 import { imgFallback } from "@/lib/utils";
 import { ArrowRight, BadgePercent, Headphones, RefreshCcw, ShieldCheck, Truck } from "lucide-react";
@@ -135,7 +136,21 @@ const TRUST = [
 
 export function TrustSection() {
   const [email, setEmail] = useState("");
-  const [subscribed, setSubscribed] = useState(false);
+  const [status, setStatus] = useState<"idle" | "loading" | "done">("idle");
+  const [error, setError] = useState("");
+
+  const join = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setStatus("loading");
+    setError("");
+    try {
+      await subscribeToClub(email.trim());
+      setStatus("done");
+    } catch (err) {
+      setStatus("idle");
+      setError(err instanceof Error ? err.message : "Could not join the club — please try again.");
+    }
+  };
 
   return (
     <section className="border-t border-gray-100 bg-gray-50/70">
@@ -158,21 +173,15 @@ export function TrustSection() {
           <h2 className="font-heading text-2xl font-bold text-white sm:text-3xl">
             Join the NCWU StyleHub Club
           </h2>
-          <p className="mx-auto mt-2 max-w-md text-sm text-brand-tint/80">
+          <p className="mx-auto mt-2 max-w-md text-sm text-white/75">
             Subscribe for exclusive offers, early access to new drops and 10% off your first order.
           </p>
-          {subscribed ? (
-            <p className="mt-6 inline-flex items-center gap-2 rounded-full bg-secondary/20 px-6 py-3 text-sm font-semibold text-white">
-              Thanks for subscribing! Check your inbox.
+          {status === "done" ? (
+            <p className="mt-6 inline-flex items-center gap-2 rounded-full bg-white/15 px-6 py-3 text-sm font-semibold text-white">
+              You&apos;re in! Check your inbox for your 10% welcome code.
             </p>
           ) : (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (email.trim()) setSubscribed(true);
-              }}
-              className="mx-auto mt-6 flex max-w-md flex-col gap-3 sm:flex-row"
-            >
+            <form onSubmit={join} className="mx-auto mt-6 flex max-w-md flex-col gap-3 sm:flex-row">
               <input
                 type="email"
                 required
@@ -180,16 +189,18 @@ export function TrustSection() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
                 aria-label="Email address"
-                className="h-12 flex-1 rounded-full border border-white/20 bg-white/10 px-5 text-sm text-white placeholder:text-brand-tint/60 focus:border-secondary focus:outline-none"
+                className="h-12 flex-1 rounded-full border border-white/20 bg-white/10 px-5 text-sm text-white placeholder:text-white/50 focus:border-white/60 focus:outline-none"
               />
               <button
                 type="submit"
-                className="h-12 cursor-pointer rounded-full bg-accent px-7 text-sm font-semibold text-white transition-colors duration-200 hover:bg-accent-dark"
+                disabled={status === "loading"}
+                className="h-12 cursor-pointer rounded-full bg-accent px-7 text-sm font-semibold text-white transition-colors duration-200 hover:bg-accent-dark disabled:cursor-wait disabled:opacity-70"
               >
-                Subscribe
+                {status === "loading" ? "Joining…" : "Subscribe"}
               </button>
             </form>
           )}
+          {error && <p className="mt-3 text-xs font-medium text-red-200">{error}</p>}
         </div>
       </div>
     </section>

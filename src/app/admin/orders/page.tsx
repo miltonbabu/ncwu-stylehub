@@ -1,7 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { api } from "@/lib/api";
+import { api, updateAdminOrder } from "@/lib/api";
 import type { Order } from "@/lib/types";
 import { formatDate, formatPrice, paymentLabel } from "@/lib/utils";
 import { Search, Trash2 } from "lucide-react";
@@ -22,6 +22,7 @@ export default function AdminOrdersPage() {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [busyId, setBusyId] = useState<number | null>(null);
+  const [trackingDraft, setTrackingDraft] = useState<Record<number, string>>({});
 
   useEffect(() => {
     api<Order[]>("/admin/orders")
@@ -30,14 +31,19 @@ export default function AdminOrdersPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const updateStatus = async (id: number, status: string) => {
-    setBusyId(id);
+  const saveOrder = async (order: Order, patch: { status?: string; tracking_number?: string }) => {
+    setBusyId(order.id);
     try {
-      const updated = await api<Order>(`/admin/orders/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify({ status }),
+      const updated = await updateAdminOrder(order.id, {
+        status: patch.status ?? order.status,
+        tracking_number: patch.tracking_number ?? order.tracking_number ?? "",
       });
-      setOrders((prev) => prev.map((o) => (o.id === id ? updated : o)));
+      setOrders((prev) => prev.map((o) => (o.id === order.id ? updated : o)));
+      setTrackingDraft((prev) => {
+        const next = { ...prev };
+        delete next[order.id];
+        return next;
+      });
     } catch (err) {
       window.alert(err instanceof Error ? err.message : "Update failed");
     } finally {
@@ -70,7 +76,7 @@ export default function AdminOrdersPage() {
     <div>
       <div className="mb-6">
         <h1 className="font-heading text-2xl font-bold text-brand-text">Order Management</h1>
-        <p className="mt-1 text-sm text-gray-500">Track orders and update fulfillment status.</p>
+        <p className="mt-1 text-sm text-gray-500">Track orders, update fulfillment status and shipping tracking numbers.</p>
       </div>
 
       <div className="mb-4 relative max-w-sm">
@@ -85,7 +91,7 @@ export default function AdminOrdersPage() {
       </div>
 
       <div className="overflow-x-auto rounded-2xl border border-gray-100 bg-white">
-        <table className="w-full min-w-[900px] text-left text-sm">
+        <table className="w-full min-w-[1100px] text-left text-sm">
           <thead>
             <tr className="border-b border-gray-100 text-xs uppercase tracking-wide text-gray-400">
               <th className="px-5 py-4">Order</th>
@@ -94,55 +100,97 @@ export default function AdminOrdersPage() {
               <th className="px-5 py-4">Total</th>
               <th className="px-5 py-4">Payment</th>
               <th className="px-5 py-4">Status</th>
+              <th className="px-5 py-4">Tracking</th>
+              <th className="px-5 py-4" />
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-500/5">
             {loading ? (
               Array.from({ length: 4 }).map((_, i) => (
                 <tr key={i}>
-                  <td colSpan={6} className="px-5 py-4">
+                  <td colSpan={8} className="px-5 py-4">
                     <div className="h-10 animate-pulse rounded bg-gray-100" />
                   </td>
                 </tr>
               ))
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-5 py-12 text-center text-gray-500">
+                <td colSpan={8} className="px-5 py-12 text-center text-gray-500">
                   No orders found.
                 </td>
               </tr>
             ) : (
-              filtered.map((order) => (
-                <tr key={order.id} className="transition-colors hover:bg-gray-50/60">
-                  <td className="px-5 py-3">
-                    <p className="font-semibold text-brand-text">#{order.id}</p>
-                    <p className="text-xs text-gray-400">{formatDate(order.created_at)}</p>
-                  </td>
-                  <td className="px-5 py-3">
-                    <p className="font-medium text-brand-text">{order.shipping_name}</p>
-                    <p className="line-clamp-1 max-w-48 text-xs text-gray-400">{order.shipping_address}</p>
-                  </td>
-                  <td className="px-5 py-3 text-gray-600">
-                    {order.items.reduce((sum, i) => sum + i.quantity, 0)} item(s)
-                  </td>
-                  <td className="px-5 py-3 font-semibold text-brand-text">{formatPrice(order.total)}</td>
-                  <td className="px-5 py-3 text-gray-600">{paymentLabel(order.payment_method)}</td>
-                  <td className="px-5 py-3">
-                    <div className="flex items-center gap-2">
-                      <Badge tone={STATUS_TONES[order.status] ?? "gray"}>{order.status}</Badge>
-                      <select
-                        value={order.status}
-                        disabled={busyId === order.id}
-                        onChange={(e) => updateStatus(order.id, e.target.value)}
-                        aria-label={`Update status for order ${order.id}`}
-                        className="cursor-pointer rounded-lg border border-gray-200 px-2 py-1.5 text-xs focus:border-primary focus:outline-none disabled:opacity-50"
-                      >
-                        {STATUSES.map((s) => (
-                          <option key={s} value={s}>
-                            {s}
-                          </option>
+              filtered.map((order) => {
+                const draft = trackingDraft[order.id] ?? order.tracking_number ?? "";
+                return (
+                  <tr key={order.id} className="transition-colors hover:bg-gray-50/60">
+                    <td className="px-5 py-3">
+                      <p className="font-semibold text-brand-text">#{order.id}</p>
+                      <p className="text-xs text-gray-400">{formatDate(order.created_at)}</p>
+                    </td>
+                    <td className="px-5 py-3">
+                      <p className="font-medium text-brand-text">{order.shipping_name}</p>
+                      <p className="line-clamp-1 max-w-48 text-xs text-gray-400">{order.shipping_address}</p>
+                    </td>
+                    <td className="px-5 py-3 text-gray-600">
+                      <ul className="space-y-1">
+                        {order.items.map((item) => (
+                          <li key={item.id} className="text-xs whitespace-nowrap">
+                            <span className="font-medium text-brand-text">{item.product_name}</span>
+                            {item.size ? (
+                              <span className="ml-1.5 rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-600">
+                                Size {item.size}
+                              </span>
+                            ) : null}
+                            <span className="ml-1.5 text-gray-400">
+                              × {item.quantity} @ {formatPrice(item.unit_price)}
+                            </span>
+                          </li>
                         ))}
-                      </select>
+                      </ul>
+                    </td>
+                    <td className="px-5 py-3 font-semibold text-brand-text">{formatPrice(order.total)}</td>
+                    <td className="px-5 py-3 text-gray-600">{paymentLabel(order.payment_method)}</td>
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-2">
+                        <Badge tone={STATUS_TONES[order.status] ?? "gray"}>{order.status}</Badge>
+                        <select
+                          value={order.status}
+                          disabled={busyId === order.id}
+                          onChange={(e) => saveOrder(order, { status: e.target.value })}
+                          aria-label={`Update status for order ${order.id}`}
+                          className="cursor-pointer rounded-lg border border-gray-200 px-2 py-1.5 text-xs focus:border-primary focus:outline-none disabled:opacity-50"
+                        >
+                          {STATUSES.map((s) => (
+                            <option key={s} value={s}>
+                              {s}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </td>
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-1.5">
+                        <input
+                          value={draft}
+                          onChange={(e) =>
+                            setTrackingDraft((prev) => ({ ...prev, [order.id]: e.target.value }))
+                          }
+                          placeholder="Tracking #"
+                          aria-label={`Tracking number for order ${order.id}`}
+                          className="w-32 rounded-lg border border-gray-200 px-2 py-1.5 text-xs focus:border-primary focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          disabled={busyId === order.id || draft === (order.tracking_number ?? "")}
+                          onClick={() => saveOrder(order, { tracking_number: draft })}
+                          className="cursor-pointer rounded-lg border border-gray-200 px-2 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          Save
+                        </button>
+                      </div>
+                    </td>
+                    <td className="px-5 py-3">
                       <button
                         type="button"
                         disabled={busyId === order.id}
@@ -152,10 +200,10 @@ export default function AdminOrdersPage() {
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>

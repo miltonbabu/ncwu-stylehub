@@ -1,11 +1,11 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { api } from "@/lib/api";
+import { api, createAdminUser } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import type { User } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
-import { Search, ShieldCheck, Trash2, UserCog } from "lucide-react";
+import { Loader2, Plus, Search, ShieldCheck, Trash2, UserCog, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function AdminUsersPage() {
@@ -14,6 +14,12 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [busyId, setBusyId] = useState<number | null>(null);
+
+  const [showCreate, setShowCreate] = useState(false);
+  const [form, setForm] = useState({ name: "", email: "", password: "", role: "customer" as "customer" | "admin" });
+  const [creating, setCreating] = useState(false);
+  const [formError, setFormError] = useState("");
+  const [created, setCreated] = useState<string | null>(null);
 
   useEffect(() => {
     api<User[]>("/admin/users")
@@ -58,12 +64,62 @@ export default function AdminUsersPage() {
       u.email.toLowerCase().includes(query.toLowerCase()),
   );
 
+  const submitCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError("");
+    if (form.password.length < 8) {
+      setFormError("Password must be at least 8 characters");
+      return;
+    }
+    setCreating(true);
+    try {
+      const createdUser = await createAdminUser({
+        name: form.name.trim(),
+        email: form.email.trim(),
+        password: form.password,
+        role: form.role,
+      });
+      setUsers((prev) => [createdUser, ...prev]);
+      setCreated(createdUser.email);
+      setForm({ name: "", email: "", password: "", role: "customer" });
+      setShowCreate(false);
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : "Could not create user");
+    } finally {
+      setCreating(false);
+    }
+  };
+
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="font-heading text-2xl font-bold text-brand-text">User Management</h1>
-        <p className="mt-1 text-sm text-gray-500">View accounts, change roles and control access.</p>
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="font-heading text-2xl font-bold text-brand-text">User Management</h1>
+          <p className="mt-1 text-sm text-gray-500">View accounts, change roles and control access.</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            setCreated(null);
+            setFormError("");
+            setShowCreate(true);
+          }}
+          className="inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-brand-gradient px-4 py-2.5 text-xs font-semibold text-white shadow-sm"
+        >
+          <Plus className="h-4 w-4" /> Add User
+        </button>
       </div>
+
+      {created && (
+        <div className="mb-4 flex items-center justify-between gap-3 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          <span>
+            Account created for <strong>{created}</strong>. A welcome email has been sent.
+          </span>
+          <button type="button" onClick={() => setCreated(null)} aria-label="Dismiss">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
 
       <div className="mb-4 relative max-w-sm">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -164,6 +220,111 @@ export default function AdminUsersPage() {
           </tbody>
         </table>
       </div>
+
+      {showCreate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="flex items-start justify-between">
+              <div>
+                <h2 className="font-heading text-lg font-bold text-brand-text">Create User</h2>
+                <p className="mt-0.5 text-xs text-gray-500">
+                  The account is created immediately and a welcome email is sent.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCreate(false)}
+                aria-label="Close"
+                className="cursor-pointer rounded-lg p-1.5 text-gray-400 hover:bg-gray-100"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={submitCreate} className="mt-5 space-y-4">
+              <div>
+                <label htmlFor="nu-name" className="mb-1 block text-xs font-semibold text-gray-600">
+                  Full name
+                </label>
+                <input
+                  id="nu-name"
+                  required
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  placeholder="Li Wei"
+                  className="h-11 w-full rounded-xl border border-gray-200 px-3 text-sm focus:border-primary focus:outline-none"
+                />
+              </div>
+              <div>
+                <label htmlFor="nu-email" className="mb-1 block text-xs font-semibold text-gray-600">
+                  Email
+                </label>
+                <input
+                  id="nu-email"
+                  type="email"
+                  required
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  placeholder="customer@example.com"
+                  className="h-11 w-full rounded-xl border border-gray-200 px-3 text-sm focus:border-primary focus:outline-none"
+                />
+              </div>
+              <div>
+                <label htmlFor="nu-password" className="mb-1 block text-xs font-semibold text-gray-600">
+                  Password
+                </label>
+                <input
+                  id="nu-password"
+                  type="password"
+                  required
+                  minLength={8}
+                  autoComplete="new-password"
+                  value={form.password}
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  placeholder="At least 8 characters"
+                  className="h-11 w-full rounded-xl border border-gray-200 px-3 text-sm focus:border-primary focus:outline-none"
+                />
+              </div>
+              <div>
+                <label htmlFor="nu-role" className="mb-1 block text-xs font-semibold text-gray-600">
+                  Role
+                </label>
+                <select
+                  id="nu-role"
+                  value={form.role}
+                  onChange={(e) => setForm({ ...form, role: e.target.value as "customer" | "admin" })}
+                  className="h-11 w-full cursor-pointer rounded-xl border border-gray-200 bg-white px-3 text-sm focus:border-primary focus:outline-none"
+                >
+                  <option value="customer">Customer</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+
+              {formError && (
+                <p className="rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-600">{formError}</p>
+              )}
+
+              <div className="flex justify-end gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowCreate(false)}
+                  className="cursor-pointer rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={creating}
+                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-brand-gradient px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {creating && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Create user
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -7,8 +7,11 @@ import {
   BarChart3,
   ClipboardList,
   LogOut,
+  Mailbox,
+  Mails,
   MessageSquare,
   Package,
+  Palette,
   ShieldCheck,
   Store,
   Users,
@@ -22,7 +25,10 @@ const NAV = [
   { href: "/admin/products", label: "Products", icon: Package },
   { href: "/admin/orders", label: "Orders", icon: ClipboardList },
   { href: "/admin/users", label: "Users", icon: Users },
+  { href: "/admin/newsletter", label: "Club", icon: Mails },
+  { href: "/admin/messages", label: "Messages", icon: Mailbox },
   { href: "/admin/reviews", label: "Reviews", icon: MessageSquare },
+  { href: "/admin/appearance", label: "Appearance", icon: Palette },
 ];
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
@@ -56,7 +62,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             onClick={() => setMobileOpen(false)}
             className={cn(
               "flex cursor-pointer items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors duration-200",
-              active ? "bg-primary text-white" : "text-brand-tint/80 hover:bg-white/10 hover:text-white",
+              active
+                ? "bg-brand-gradient text-white shadow-lg shadow-black/10"
+                : "text-brand-tint/80 hover:bg-white/10 hover:text-white",
             )}
           >
             <item.icon className="h-5 w-5" />

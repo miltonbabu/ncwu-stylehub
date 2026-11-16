@@ -4,12 +4,12 @@ import { useAuth } from "@/lib/auth-context";
 import { useCart } from "@/lib/cart-context";
 import { cn } from "@/lib/utils";
 import {
+  Heart,
   LayoutDashboard,
   LogOut,
   Menu,
   Search,
   ShoppingBag,
-  Store,
   User as UserIcon,
   X,
 } from "lucide-react";
@@ -45,7 +45,7 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-gray-100 bg-white/90 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6">
+      <div className="mx-auto flex h-16 max-w-7xl items-center gap-2 px-4 sm:gap-4 sm:px-6">
         <button
           type="button"
           className="cursor-pointer rounded-lg p-2 hover:bg-brand-soft lg:hidden"
@@ -55,11 +55,15 @@ export function SiteHeader() {
           {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
 
-        <Link href="/" className="flex items-center gap-2" aria-label="NCWU StyleHub home">
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-white">
-            <Store className="h-5 w-5" aria-hidden />
-          </span>
-          <span className="font-heading text-xl font-bold tracking-tight text-brand-text">
+        <Link href="/" className="flex shrink-0 items-center gap-1.5 sm:gap-2" aria-label="NCWU StyleHub home">
+          <img
+            src="/stylehub-icon.png"
+            alt=""
+            width={36}
+            height={36}
+            className="h-7 w-7 rounded-full object-cover ring-1 ring-black/5 sm:h-9 sm:w-9"
+          />
+          <span className="font-heading text-base font-bold tracking-tight text-brand-text sm:text-xl">
             NCWU <span className="text-primary">StyleHub</span>
           </span>
         </Link>
@@ -93,6 +97,13 @@ export function SiteHeader() {
         </form>
 
         <div className="ml-auto flex items-center gap-1 md:ml-2">
+          <Link
+            href="/wishlist"
+            className="hidden rounded-full p-2.5 transition-colors duration-200 hover:bg-brand-soft sm:block"
+            aria-label="Saved items"
+          >
+            <Heart className="h-5 w-5 text-brand-text" />
+          </Link>
           <Link
             href="/cart"
             className="relative rounded-full p-2.5 transition-colors duration-200 hover:bg-brand-soft"
@@ -134,6 +145,13 @@ export function SiteHeader() {
                     <UserIcon className="h-4 w-4" /> My Account
                   </Link>
                   <Link
+                    href="/wishlist"
+                    onClick={() => setAccountOpen(false)}
+                    className="flex cursor-pointer items-center gap-2 px-4 py-2.5 text-sm hover:bg-brand-soft"
+                  >
+                    <Heart className="h-4 w-4" /> Saved Items
+                  </Link>
+                  <Link
                     href="/orders"
                     onClick={() => setAccountOpen(false)}
                     className="flex cursor-pointer items-center gap-2 px-4 py-2.5 text-sm hover:bg-brand-soft"
@@ -166,7 +184,7 @@ export function SiteHeader() {
           ) : ready ? (
             <Link
               href="/auth/sign-in"
-              className="ml-1 inline-flex h-10 items-center rounded-full bg-brand-text px-5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-primary"
+              className="ml-1 hidden h-10 items-center rounded-full bg-brand-text px-5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-primary sm:inline-flex"
             >
               Sign In
             </Link>

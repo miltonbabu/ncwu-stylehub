@@ -35,21 +35,27 @@ export function ProductCard({ product, className }: { product: Product; classNam
         className,
       )}
     >
-      <Link href={`/product/${product.id}`} className="relative block aspect-[4/5] overflow-hidden bg-gray-50">
-        <img
-          src={src}
-          alt={product.name}
-          loading="lazy"
-          onError={() => setSrc(imgFallback(`product-${product.id}`))}
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-        />
-        <div className="absolute left-2 top-2 flex flex-col gap-1 sm:left-3 sm:top-3">
+      <div className="relative block aspect-[4/5] overflow-hidden bg-gray-50">
+        <Link
+          href={`/product/${product.id}`}
+          aria-label={`View ${product.name}`}
+          className="absolute inset-0 block"
+        >
+          <img
+            src={src}
+            alt={product.name}
+            loading="lazy"
+            onError={() => setSrc(imgFallback(`product-${product.id}`))}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        </Link>
+        <div className="pointer-events-none absolute left-2 top-2 z-10 flex flex-col gap-1 sm:left-3 sm:top-3">
           {discount > 0 && <Badge tone="accent">-{discount}%</Badge>}
           {product.is_featured && <Badge tone="gold">Featured</Badge>}
           {product.stock <= 0 && <Badge tone="gray">Sold out</Badge>}
         </div>
-        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/25 to-transparent opacity-60 transition-opacity duration-300 lg:opacity-0 lg:group-hover:opacity-100" />
-        <div className="absolute inset-x-2 bottom-2 flex translate-y-0 gap-2 opacity-100 transition-all duration-200 sm:inset-x-3 sm:bottom-3 lg:translate-y-3 lg:opacity-0 lg:group-hover:translate-y-0 lg:group-hover:opacity-100">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/25 to-transparent opacity-60 transition-opacity duration-300 lg:opacity-0 lg:group-hover:opacity-100" />
+        <div className="absolute inset-x-2 bottom-2 z-10 flex translate-y-0 gap-2 opacity-100 transition-all duration-200 sm:inset-x-3 sm:bottom-3 lg:translate-y-3 lg:opacity-0 lg:group-hover:translate-y-0 lg:group-hover:opacity-100">
           <button
             type="button"
             onClick={onAdd}
@@ -65,12 +71,12 @@ export function ProductCard({ product, className }: { product: Product; classNam
           <Link
             href={`/product/${product.id}`}
             className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-white text-brand-text shadow transition-colors hover:text-primary sm:h-10 sm:w-10"
-            aria-label={`View ${product.name}`}
+            aria-label={`Open ${product.name}`}
           >
             <Eye className="h-4 w-4" />
           </Link>
         </div>
-      </Link>
+      </div>
 
       <div className="flex flex-1 flex-col gap-1 p-3 sm:gap-1.5 sm:p-4">
         <Link

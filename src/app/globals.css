@@ -6,56 +6,108 @@
    ============================================================ */
 
 :root,
-[data-theme="noir"] {
-  --brand: #1f1d1b;        /* ink — primary surfaces & text */
-  --brand-dark: #100f0e;
-  --brand-soft: #eceae6;   /* subtle fills & hovers */
-  --accent: #b4553f;       /* terracotta — CTAs */
-  --accent-dark: #94402f;
-  --page: #faf8f5;         /* warm off-white page background */
-  --surface: #ffffff;      /* cards */
-  --ink: #1f1d1b;
-  --tint: #e7e2db;         /* light text on dark surfaces */
-  --gold: #b08d57;
-}
-
-[data-theme="ocean"] {
-  --brand: #123a5c;
-  --brand-dark: #0b2740;
-  --brand-soft: #e6edf3;
-  --accent: #c08a3e;
-  --accent-dark: #a3702c;
-  --page: #f5f7f9;
+[data-theme="aurora"] {
+  --brand: #6d28d9;        /* violet — primary surfaces & CTAs */
+  --brand-dark: #5b21b6;
+  --brand-soft: #ede9fe;   /* subtle fills & hovers */
+  --accent: #06b6d4;       /* cyan — highlights */
+  --accent-dark: #0891b2;
+  --page: #f7f5ff;
   --surface: #ffffff;
-  --ink: #14202b;
-  --tint: #dbe6ee;
-  --gold: #c08a3e;
+  --ink: #1e1b4b;
+  --tint: #e0e7ff;         /* light text on dark surfaces */
+  --gold: #f59e0b;
 }
 
-[data-theme="blush"] {
-  --brand: #6d2f4a;
-  --brand-dark: #4d2035;
-  --brand-soft: #f4e6eb;
-  --accent: #c2708a;
-  --accent-dark: #a55b74;
-  --page: #fdf7f9;
+[data-theme="sunset"] {
+  --brand: #ea580c;
+  --brand-dark: #c2410c;
+  --brand-soft: #ffedd5;
+  --accent: #db2777;
+  --accent-dark: #be185d;
+  --page: #fff7ed;
   --surface: #ffffff;
-  --ink: #3b1f2b;
-  --tint: #f0dde4;
-  --gold: #c9a227;
+  --ink: #431407;
+  --tint: #ffedd5;
+  --gold: #f59e0b;
 }
 
-[data-theme="forest"] {
+[data-theme="emerald"] {
   --brand: #059669;
   --brand-dark: #047857;
   --brand-soft: #d1fae5;
-  --accent: #f97316;
-  --accent-dark: #ea580c;
-  --page: #ecfdf5;
+  --accent: #84cc16;
+  --accent-dark: #65a30d;
+  --page: #f0fdf9;
   --surface: #ffffff;
   --ink: #064e3b;
-  --tint: #d1fae5;
+  --tint: #ccfbf1;
   --gold: #f59e0b;
+}
+
+[data-theme="ocean"] {
+  --brand: #0284c7;
+  --brand-dark: #0369a1;
+  --brand-soft: #e0f2fe;
+  --accent: #4f46e5;
+  --accent-dark: #4338ca;
+  --page: #f0f9ff;
+  --surface: #ffffff;
+  --ink: #0c4a6e;
+  --tint: #dbeafe;
+  --gold: #f59e0b;
+}
+
+[data-theme="candy"] {
+  --brand: #db2777;
+  --brand-dark: #be185d;
+  --brand-soft: #fce7f3;
+  --accent: #8b5cf6;
+  --accent-dark: #7c3aed;
+  --page: #fdf4ff;
+  --surface: #ffffff;
+  --ink: #4a044e;
+  --tint: #fae8ff;
+  --gold: #f59e0b;
+}
+
+[data-theme="royal"] {
+  --brand: #4338ca;
+  --brand-dark: #3730a3;
+  --brand-soft: #e0e7ff;
+  --accent: #d97706;
+  --accent-dark: #b45309;
+  --page: #f5f6ff;
+  --surface: #ffffff;
+  --ink: #1e1b4b;
+  --tint: #e0e7ff;
+  --gold: #f59e0b;
+}
+
+[data-theme="citrus"] {
+  --brand: #4d7c0f;
+  --brand-dark: #3f6212;
+  --brand-soft: #ecfccb;
+  --accent: #f59e0b;
+  --accent-dark: #d97706;
+  --page: #f7fee7;
+  --surface: #ffffff;
+  --ink: #1a2e05;
+  --tint: #e2f5c4;
+  --gold: #f59e0b;
+}
+
+[data-theme="noir"] {
+  --brand: #18181b;
+  --brand-dark: #09090b;
+  --brand-soft: #f4f4f5;
+  --accent: #f97316;
+  --accent-dark: #ea580c;
+  --page: #fafafa;
+  --surface: #ffffff;
+  --ink: #18181b;
+  --tint: #e4e4e7;
+  --gold: #eab308;
 }
 
 @theme inline {
@@ -71,8 +123,8 @@
   --color-brand-tint: var(--tint);
   --color-surface: var(--surface);
   --color-gold: var(--gold);
-  --font-heading: var(--font-rubik), ui-sans-serif, system-ui, sans-serif;
-  --font-body: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-inter-tight), ui-sans-serif, system-ui, sans-serif;
 }
 
 html {
@@ -81,8 +133,41 @@ html {
 
 body {
   background-color: var(--page);
+  background-image:
+    radial-gradient(1100px 520px at 8% -12%, color-mix(in srgb, var(--brand) 14%, transparent), transparent 62%),
+    radial-gradient(900px 480px at 100% -6%, color-mix(in srgb, var(--accent) 13%, transparent), transparent 58%);
+  /* No `background-attachment: fixed` and no colour transition: swapping the theme
+     must repaint once, instantly, instead of animating the whole page. */
   color: var(--ink);
   font-family: var(--font-body);
+}
+
+/* Theme switching should feel instant — kill transitions for the single frame it applies. */
+html.theme-switching,
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after {
+  transition: none !important;
+}
+
+/* Brand gradient — used on primary buttons and active admin nav */
+.bg-brand-gradient {
+  background-image: linear-gradient(135deg, var(--brand) 0%, var(--accent) 100%);
+}
+
+.bg-brand-gradient:hover {
+  filter: brightness(0.93) saturate(1.05);
+}
+
+/* Footer gradient — always a deep, dark base so the white text stays readable,
+   with brand/accent glows layered on top for the active theme. */
+.bg-footer-gradient {
+  color: #ffffff;
+  background-color: #12101f;
+  background-image:
+    radial-gradient(900px 420px at 82% -20%, color-mix(in srgb, var(--brand) 40%, transparent), transparent 62%),
+    radial-gradient(760px 460px at 0% 120%, color-mix(in srgb, var(--accent) 26%, transparent), transparent 60%),
+    linear-gradient(158deg, #211b3d 0%, #14111f 52%, #0b0912 100%);
 }
 
 h1,
@@ -92,6 +177,7 @@ h4,
 h5,
 h6 {
   font-family: var(--font-heading);
+  letter-spacing: -0.025em;
 }
 
 ::selection {

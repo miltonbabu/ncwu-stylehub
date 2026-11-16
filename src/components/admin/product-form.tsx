@@ -18,7 +18,9 @@ export function ProductForm({ product }: { product?: Product }) {
   const [categoryId, setCategoryId] = useState(product?.category_id ? String(product.category_id) : "");
   const [price, setPrice] = useState(product ? String(product.price) : "");
   const [compareAt, setCompareAt] = useState(product?.compare_at_price ? String(product.compare_at_price) : "");
+  const [costPrice, setCostPrice] = useState(product?.cost_price ? String(product.cost_price) : "0");
   const [stock, setStock] = useState(product ? String(product.stock) : "10");
+  const [sizes, setSizes] = useState(product?.sizes ?? "");
   const [description, setDescription] = useState(product?.description ?? "");
   const [featured, setFeatured] = useState(product?.is_featured ?? false);
   const [active, setActive] = useState(product?.is_active ?? true);
@@ -100,7 +102,13 @@ export function ProductForm({ product }: { product?: Product }) {
         category_id: Number(categoryId),
         price: Number(price),
         compare_at_price: compareAt ? Number(compareAt) : null,
+        cost_price: costPrice ? Number(costPrice) : 0,
         stock: Number(stock),
+        sizes: sizes
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+          .join(","),
         image_url: urlSlots[0] ?? "",
         images: urlSlots,
         description,
@@ -169,6 +177,26 @@ export function ProductForm({ product }: { product?: Product }) {
         </div>
         <Field label="Stock Quantity" htmlFor="pf-stock">
           <Input id="pf-stock" type="number" min="0" required value={stock} onChange={(e) => setStock(e.target.value)} />
+        </Field>
+        <Field label="Cost Price (¥)" htmlFor="pf-cost">
+          <Input
+            id="pf-cost"
+            type="number"
+            step="0.01"
+            min="0"
+            value={costPrice}
+            onChange={(e) => setCostPrice(e.target.value)}
+          />
+          <p className="mt-1 text-xs text-gray-400">
+            What you pay to source one unit. Used to calculate real profit in the dashboard — never shown to
+            customers.
+          </p>
+        </Field>
+        <Field label="Size Options" htmlFor="pf-sizes">
+          <Input id="pf-sizes" value={sizes} onChange={(e) => setSizes(e.target.value)} placeholder="S,M,L,XL" />
+          <p className="mt-1 text-xs text-gray-400">
+            e.g. S,M,L,XL or 38,39,40 — comma-separated. Leave empty if this product has no sizes.
+          </p>
         </Field>
         <Field label="Description" htmlFor="pf-desc">
           <Textarea id="pf-desc" rows={5} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe the fabric, fit and style..." />

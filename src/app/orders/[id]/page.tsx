@@ -2,14 +2,14 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { api } from "@/lib/api";
+import { api, cancelOrder } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import type { Order } from "@/lib/types";
-import { formatDate, formatPrice, imgFallback, paymentLabel } from "@/lib/utils";
-import { ArrowLeft, MapPin, Phone, User as UserIcon } from "lucide-react";
+import { cn, formatDate, formatPrice, imgFallback, paymentLabel } from "@/lib/utils";
+import { ArrowLeft, Check, MapPin, Package, Phone, RefreshCw, User as UserIcon, XCircle } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 const STATUS_TONES: Record<string, "gold" | "primary" | "accent" | "green" | "red" | "gray"> = {
   pending: "gold",
@@ -19,12 +19,40 @@ const STATUS_TONES: Record<string, "gold" | "primary" | "accent" | "green" | "re
   cancelled: "red",
 };
 
+/** Same status set the admin panel uses. */
+const TRACKING_STEPS = [
+  { key: "pending", label: "Order Placed", desc: "We received your order" },
+  { key: "paid", label: "Paid", desc: "Payment confirmed" },
+  { key: "shipped", label: "Shipped", desc: "On the way to you" },
+  { key: "completed", label: "Delivered", desc: "Enjoy your items" },
+];
+
+function formatWhen(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { user, ready } = useAuth();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState("");
+
+  const load = useCallback(async () => {
+    if (!id) return;
+    const data = await api<Order>(`/orders/${id}`);
+    setOrder(data);
+  }, [id]);
 
   useEffect(() => {
     if (ready && !user) {
@@ -32,12 +60,42 @@ export default function OrderDetailPage() {
       return;
     }
     if (user && id) {
-      api<Order>(`/orders/${id}`)
-        .then(setOrder)
+      load()
         .catch(() => setOrder(null))
         .finally(() => setLoading(false));
     }
-  }, [ready, user, id, router]);
+  }, [ready, user, id, router, load]);
+
+  const refresh = async () => {
+    setBusy(true);
+    setNotice("");
+    try {
+      await load();
+      setNotice("Status refreshed from the store.");
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : "Could not refresh the order.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const cancel = async () => {
+    if (!order) return;
+    if (!window.confirm(`Cancel order #${order.id}? This releases the reserved stock and cannot be undone.`)) {
+      return;
+    }
+    setBusy(true);
+    setNotice("");
+    try {
+      const updated = await cancelOrder(order.id);
+      setOrder(updated);
+      setNotice("Your order was cancelled. A confirmation email is on its way.");
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : "Could not cancel the order.");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   if (!ready || !user || loading) {
     return (
@@ -68,13 +126,109 @@ export default function OrderDetailPage() {
         <ArrowLeft className="h-4 w-4" /> Back to My Orders
       </button>
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+      <div className="mt-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="font-heading text-3xl font-bold text-brand-text">Order #{order.id}</h1>
           <p className="mt-1 text-sm text-gray-500">Placed on {formatDate(order.created_at)}</p>
+          <p className="mt-0.5 text-xs text-gray-400">
+            Last updated {formatWhen(order.updated_at ?? order.created_at)}
+          </p>
         </div>
-        <Badge tone={STATUS_TONES[order.status] ?? "gray"}>{order.status.toUpperCase()}</Badge>
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge tone={STATUS_TONES[order.status] ?? "gray"}>{order.status.toUpperCase()}</Badge>
+          <button
+            type="button"
+            onClick={refresh}
+            disabled={busy}
+            className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:border-primary hover:text-primary disabled:cursor-wait disabled:opacity-50"
+          >
+            <RefreshCw className={cn("h-3.5 w-3.5", busy && "animate-spin")} /> Refresh
+          </button>
+          {(order.status === "pending" || order.status === "paid") && (
+            <button
+              type="button"
+              onClick={cancel}
+              disabled={busy}
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 transition-colors hover:bg-red-50 disabled:cursor-wait disabled:opacity-50"
+            >
+              <XCircle className="h-3.5 w-3.5" /> Cancel order
+            </button>
+          )}
+        </div>
       </div>
+
+      {notice && (
+        <p className="mt-4 rounded-xl bg-brand-soft px-4 py-3 text-sm font-medium text-brand-text">{notice}</p>
+      )}
+
+      <section className="mt-8 rounded-2xl border border-gray-100 bg-white p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="flex items-center gap-2 font-heading text-lg font-bold text-brand-text">
+            <Package className="h-5 w-5 text-primary" /> Order Tracking
+          </h2>
+          {order.tracking_number ? (
+            <p className="text-sm text-gray-500">
+              Tracking number:{" "}
+              <span className="font-semibold tracking-wide text-brand-text">{order.tracking_number}</span>
+            </p>
+          ) : (
+            <p className="text-sm text-gray-400">No tracking number yet — it appears here once the order ships.</p>
+          )}
+        </div>
+
+        <ol className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-5">
+          {[
+            ...TRACKING_STEPS,
+            { key: "cancelled", label: "Cancelled", desc: "Order cancelled — stock released" },
+          ].map((step, idx) => {
+            const cancelled = order.status === "cancelled";
+            const currentStep = TRACKING_STEPS.findIndex((s) => s.key === order.status);
+            const isCancelStep = step.key === "cancelled";
+            const done = !cancelled && !isCancelStep && idx <= currentStep;
+            const current = !cancelled && idx === currentStep;
+            const cancelActive = cancelled && isCancelStep;
+            return (
+              <li key={step.key} className="flex items-start gap-3">
+                <span
+                  className={cn(
+                    "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold",
+                    cancelActive
+                      ? "bg-red-600 text-white"
+                      : done
+                        ? "bg-primary text-white"
+                        : "border-2 border-gray-200 bg-white text-gray-400",
+                    current && "ring-4 ring-primary/20",
+                  )}
+                >
+                  {cancelActive ? (
+                    <XCircle className="h-4 w-4" />
+                  ) : done ? (
+                    <Check className="h-4 w-4" />
+                  ) : (
+                    idx + 1
+                  )}
+                </span>
+                <div>
+                  <p
+                    className={cn(
+                      "text-sm font-semibold",
+                      cancelActive ? "text-red-600" : done ? "text-brand-text" : "text-gray-400",
+                    )}
+                  >
+                    {step.label}
+                  </p>
+                  <p className="text-xs text-gray-500">{step.desc}</p>
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+        {order.status === "cancelled" && (
+          <p className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
+            This order was cancelled and will not be delivered. Reserved stock has been released.
+          </p>
+        )}
+      </section>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_320px]">
         <section className="rounded-2xl border border-gray-100 bg-white">
@@ -104,6 +258,7 @@ export default function OrderDetailPage() {
                   )}
                   <p className="mt-0.5 text-xs text-gray-500">
                     {formatPrice(item.unit_price)} × {item.quantity}
+                    {item.size ? <span className="ml-2 rounded-full bg-gray-100 px-2 py-0.5 font-medium text-gray-600">Size: {item.size}</span> : null}
                   </p>
                 </div>
                 <p className="font-heading font-bold text-brand-text">

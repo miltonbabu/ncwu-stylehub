@@ -71,6 +71,14 @@ function SignInContent() {
               placeholder="••••••••"
             />
           </Field>
+          <div className="-mt-2 text-right">
+            <Link
+              href="/auth/forgot-password"
+              className="text-xs font-semibold text-primary hover:underline"
+            >
+              Forgot password?
+            </Link>
+          </div>
 
           {error && (
             <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600" role="alert">
@@ -92,8 +100,8 @@ function SignInContent() {
 
         <div className="mt-6 rounded-2xl bg-brand-soft p-4 text-xs text-brand-text/80">
           <p className="font-semibold">Demo accounts</p>
-          <p className="mt-1">Admin: admin@ncwustylehub.com / Admin@123</p>
-          <p>Customer: demo@ncwustylehub.com / Demo@123</p>
+          <p className="mt-1">Admin: admin@shop.ncwu.site / admin@123</p>
+          <p>Customer: user@shop.ncwu.site / demo@123</p>
         </div>
       </div>
     </div>

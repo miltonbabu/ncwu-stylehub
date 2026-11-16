@@ -78,11 +78,13 @@ export default function OrdersPage() {
               </div>
               <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-gray-500/10 pt-4">
                 <p className="line-clamp-1 text-sm text-gray-500">
-                  {order.items.map((i) => `${i.product_name} × ${i.quantity}`).join(", ")}
+                  {order.items.map((i) => `${i.product_name} × ${i.quantity}${i.size ? ` (Size ${i.size})` : ""}`).join(", ")}
                 </p>
-                <Link href={`/orders/${order.id}`} className="ml-auto">
-                  <Button variant="outline" size="sm">View Details</Button>
-                </Link>
+                <div className="ml-auto flex items-center gap-2">
+                  <Link href={`/orders/${order.id}`}>
+                    <Button variant="outline" size="sm">Track &amp; manage</Button>
+                  </Link>
+                </div>
               </div>
             </li>
           ))}

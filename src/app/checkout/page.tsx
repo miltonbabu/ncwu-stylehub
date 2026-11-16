@@ -52,7 +52,7 @@ export default function CheckoutPage() {
           shipping_address: address,
           shipping_phone: phone,
           payment_method: payment,
-          items: items.map((l) => ({ product_id: l.product.id, quantity: l.quantity })),
+          items: items.map((l) => ({ product_id: l.product.id, quantity: l.quantity, size: l.size || null })),
         }),
       });
       setPlaced(order);
@@ -76,9 +76,22 @@ export default function CheckoutPage() {
           Thank you, {placed.shipping_name}. Your order <span className="font-semibold">#{placed.id}</span>{" "}
           for <span className="font-semibold">{formatPrice(placed.total)}</span> has been placed successfully.
         </p>
+
+        {placed.tracking_number && (
+          <div className="mx-auto mt-6 max-w-md rounded-2xl border border-gray-100 bg-white p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Your tracking code</p>
+            <p className="mt-1 font-mono text-lg font-bold tracking-wider text-brand-text">
+              {placed.tracking_number}
+            </p>
+            <p className="mt-1 text-xs text-gray-500">
+              A confirmation email is on its way. Track this code anytime from My Account.
+            </p>
+          </div>
+        )}
+
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Button size="lg" onClick={() => router.push(`/orders/${placed.id}`)}>
-            View Order
+            Track Order
           </Button>
           <Button size="lg" variant="outline" onClick={() => router.push("/shop")}>
             Continue Shopping
@@ -174,10 +187,10 @@ export default function CheckoutPage() {
         <aside className="h-fit rounded-2xl border border-gray-100 bg-gray-50/70 p-6">
           <h2 className="font-heading text-lg font-bold text-brand-text">Order Summary</h2>
           <ul className="mt-4 max-h-64 space-y-3 overflow-y-auto pr-1">
-            {items.map(({ product, quantity }) => (
-              <li key={product.id} className="flex items-center justify-between gap-3 text-sm">
+            {items.map(({ product, quantity, size }) => (
+              <li key={`${product.id}-${size}`} className="flex items-center justify-between gap-3 text-sm">
                 <span className="line-clamp-1 text-gray-600">
-                  {product.name} <span className="text-gray-400">× {quantity}</span>
+                  {product.name} <span className="text-gray-400">× {quantity}{size ? ` · Size ${size}` : ""}</span>
                 </span>
                 <span className="shrink-0 font-semibold text-brand-text">
                   {formatPrice(product.price * quantity)}
