@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/lib/cart-context";
-import { FREE_SHIPPING_THRESHOLD, formatPrice, imgFallback, shippingFor } from "@/lib/utils";
+import { FREE_SHIPPING_THRESHOLD, formatPrice, imgFallback, shippingFor, cloudinaryImg } from "@/lib/utils";
 import { ArrowRight, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -45,7 +45,7 @@ export default function CartPage() {
             <li key={`${product.id}-${size}`} className="flex gap-4 rounded-2xl border border-gray-100 bg-white p-4">
               <Link href={`/product/${product.id}`} className="h-24 w-20 shrink-0 overflow-hidden rounded-xl bg-gray-50">
                 <img
-                  src={product.image_url}
+                  src={cloudinaryImg(product.image_url, { width: 200, height: 240 })}
                   alt={product.name}
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = imgFallback(`product-${product.id}`);

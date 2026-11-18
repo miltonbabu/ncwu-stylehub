@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { api, cancelOrder } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import type { Order } from "@/lib/types";
-import { cn, formatDate, formatPrice, imgFallback, paymentLabel } from "@/lib/utils";
+import { cn, formatDate, formatPrice, imgFallback, paymentLabel, cloudinaryImg } from "@/lib/utils";
 import { ArrowLeft, Check, MapPin, Package, Phone, RefreshCw, User as UserIcon, XCircle } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -240,7 +240,7 @@ export default function OrderDetailPage() {
               <li key={item.id} className="flex items-center gap-4 px-6 py-4">
                 <div className="h-16 w-14 shrink-0 overflow-hidden rounded-xl bg-gray-50">
                   <img
-                    src={item.product_image || imgFallback(`item-${item.id}`)}
+                    src={cloudinaryImg(item.product_image, { width: 160, height: 192 }) || imgFallback(`item-${item.id}`)}
                     alt={item.product_name}
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = imgFallback(`item-${item.id}`);

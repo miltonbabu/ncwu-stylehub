@@ -1,7 +1,7 @@
 "use client";
 
 import type { Product } from "@/lib/types";
-import { cn, formatPrice, imgFallback } from "@/lib/utils";
+import { cn, formatPrice, imgFallback, cloudinaryImg } from "@/lib/utils";
 import { Eye, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 import { useCart } from "@/lib/cart-context";
@@ -12,7 +12,12 @@ import { useState } from "react";
 export function ProductCard({ product, className }: { product: Product; className?: string }) {
   const { add } = useCart();
   const [added, setAdded] = useState(false);
-  const [src, setSrc] = useState(product.image_url);
+  const [src, setSrc] = useState(cloudinaryImg(product.image_url, { width: 640, height: 800 }));
+  const srcSet = product.image_url
+    ? [320, 480, 640]
+        .map((w) => `${cloudinaryImg(product.image_url, { width: w, height: Math.round(w * 1.25) })} ${w}w`)
+        .join(", ")
+    : undefined;
 
   const discount =
     product.compare_at_price && product.compare_at_price > product.price
@@ -43,6 +48,8 @@ export function ProductCard({ product, className }: { product: Product; classNam
         >
           <img
             src={src}
+            srcSet={srcSet}
+            sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 22vw"
             alt={product.name}
             loading="lazy"
             onError={() => setSrc(imgFallback(`product-${product.id}`))}

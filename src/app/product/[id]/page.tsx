@@ -8,7 +8,7 @@ import { addWishlist, api, fetchWishlist, removeWishlist } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useCart } from "@/lib/cart-context";
 import type { Product } from "@/lib/types";
-import { cn, formatPrice, imgFallback } from "@/lib/utils";
+import { cn, formatPrice, imgFallback, cloudinaryImg } from "@/lib/utils";
 import { ChevronRight, Heart, Minus, Plus, ShieldCheck, ShoppingBag, Truck } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -146,7 +146,7 @@ export default function ProductDetailPage() {
           <div className="relative aspect-square overflow-hidden rounded-3xl bg-gray-50">
             <img
               key={activeImage}
-              src={activeImage}
+              src={cloudinaryImg(activeImage, { width: 1000, height: 1000 })}
               alt={product.name}
               onError={(e) => {
                 (e.target as HTMLImageElement).src = imgFallback(`product-${product.id}`);
@@ -174,7 +174,7 @@ export default function ProductDetailPage() {
                   aria-label="View product image"
                 >
                   <img
-                    src={url}
+                    src={cloudinaryImg(url, { width: 200, height: 200 })}
                     alt=""
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = imgFallback(`product-${product.id}`);

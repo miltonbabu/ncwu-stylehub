@@ -33,3 +33,28 @@ export function shippingFor(subtotal: number): number {
 export function imgFallback(seed: string): string {
   return `https://picsum.photos/seed/${encodeURIComponent(seed)}/900/1100`;
 }
+
+/**
+ * Build an optimized Cloudinary delivery URL by injecting a transformation
+ * component right after `/upload/` (per Cloudinary docs: f_auto/q_auto as a
+ * separate component auto-picks WebP/AVIF and the right quality). Non-Cloudinary
+ * URLs (local /uploads/, external placeholders) are returned unchanged.
+ */
+export function cloudinaryImg(
+  src: string | null | undefined,
+  opts: { width?: number; height?: number } = {},
+): string {
+  if (!src) return "";
+  const uploadAt = src.indexOf("/upload/");
+  if (uploadAt === -1) return src;
+
+  const parts: string[] = ["f_auto", "q_auto"];
+  if (opts.width) parts.push(`w_${opts.width}`);
+  if (opts.height) parts.push(`h_${opts.height}`);
+  if (opts.width && opts.height) parts.push("c_fill", "g_auto");
+  const transform = parts.join(",");
+
+  const head = src.slice(0, uploadAt + "/upload/".length);
+  const tail = src.slice(uploadAt + "/upload/".length);
+  return `${head}${transform}/${tail}`;
+}

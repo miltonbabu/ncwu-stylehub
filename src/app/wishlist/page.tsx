@@ -5,7 +5,7 @@ import { fetchWishlist, removeWishlist } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useCart } from "@/lib/cart-context";
 import type { Product } from "@/lib/types";
-import { formatPrice, imgFallback } from "@/lib/utils";
+import { formatPrice, imgFallback, cloudinaryImg } from "@/lib/utils";
 import { Heart, ShoppingBag, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -90,7 +90,7 @@ export default function WishlistPage() {
             <li key={product.id} className="flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white">
               <Link href={`/product/${product.id}`} className="relative aspect-square overflow-hidden bg-gray-50">
                 <img
-                  src={product.image_url}
+                  src={cloudinaryImg(product.image_url, { width: 600, height: 600 })}
                   alt={product.name}
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = imgFallback(`product-${product.id}`);

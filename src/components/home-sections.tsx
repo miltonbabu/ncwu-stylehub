@@ -3,7 +3,7 @@
 import { getSeasonalPromo } from "@/lib/seasonal";
 import { subscribeToClub } from "@/lib/api";
 import type { Category, Promotion } from "@/lib/types";
-import { imgFallback } from "@/lib/utils";
+import { imgFallback, cloudinaryImg } from "@/lib/utils";
 import { ArrowRight, BadgePercent, Headphones, RefreshCcw, ShieldCheck, Truck } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -36,7 +36,7 @@ export function CategoryGrid({ categories }: { categories: Category[] }) {
           >
             <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-brand-soft">
               <img
-                src={cat.image_url}
+                src={cloudinaryImg(cat.image_url, { width: 400, height: 400 })}
                 alt={cat.name}
                 loading="lazy"
                 onError={(e) => {
@@ -82,7 +82,7 @@ export function PromoSections({ promotions }: { promotions: Promotion[] }) {
               className="group relative flex h-72 overflow-hidden rounded-3xl bg-brand-text"
             >
               <img
-                src={promo.image_url}
+                src={cloudinaryImg(promo.image_url, { width: 900, height: 480 })}
                 alt={promo.title}
                 loading="lazy"
                 onError={(e) => {

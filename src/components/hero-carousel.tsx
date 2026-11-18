@@ -1,7 +1,7 @@
 "use client";
 
 import type { Banner } from "@/lib/types";
-import { cn, imgFallback } from "@/lib/utils";
+import { cn, imgFallback, cloudinaryImg } from "@/lib/utils";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -100,7 +100,7 @@ export function HeroCarousel({ banners }: { banners?: Banner[] }) {
           aria-hidden={i !== index}
         >
           <img
-            src={slide.image_url}
+            src={cloudinaryImg(slide.image_url, { width: 1800, height: 720 })}
             alt={slide.title}
             onError={(e) => {
               (e.target as HTMLImageElement).src = imgFallback(`banner-${slide.id}`);

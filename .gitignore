@@ -41,3 +41,16 @@ build.log
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# ---- backend (java-backend/) artifacts & secrets ----
+java-backend/target/
+java-backend/data/
+java-backend/uploads/
+java-backend/.env
+
+# ---- AI agent / tooling files (auto-generated, not app code) ----
+AGENTS.md
+.agents/
+agent/
+.tooling/
+.tools/

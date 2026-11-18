@@ -33,6 +33,7 @@ export function SiteHeader() {
   const [query, setQuery] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   if (pathname?.startsWith("/admin")) return null;
 
@@ -41,6 +42,7 @@ export function SiteHeader() {
     const trimmed = query.trim();
     router.push(trimmed ? `/shop?search=${encodeURIComponent(trimmed)}` : "/shop");
     setMenuOpen(false);
+    setSearchOpen(false);
   };
 
   return (
@@ -49,7 +51,10 @@ export function SiteHeader() {
         <button
           type="button"
           className="cursor-pointer rounded-lg p-2 hover:bg-brand-soft lg:hidden"
-          onClick={() => setMenuOpen((v) => !v)}
+          onClick={() => {
+            setMenuOpen((v) => !v);
+            setSearchOpen(false);
+          }}
           aria-label="Toggle navigation menu"
         >
           {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -97,6 +102,22 @@ export function SiteHeader() {
         </form>
 
         <div className="ml-auto flex items-center gap-1 md:ml-2">
+          <button
+            type="button"
+            onClick={() => {
+              setSearchOpen((v) => !v);
+              setMenuOpen(false);
+            }}
+            className="cursor-pointer rounded-full p-2.5 transition-colors duration-200 hover:bg-brand-soft md:hidden"
+            aria-label="Search products"
+            aria-expanded={searchOpen}
+          >
+            {searchOpen ? (
+              <X className="h-5 w-5 text-brand-text" />
+            ) : (
+              <Search className="h-5 w-5 text-brand-text" />
+            )}
+          </button>
           <Link
             href="/wishlist"
             className="hidden rounded-full p-2.5 transition-colors duration-200 hover:bg-brand-soft sm:block"
@@ -192,20 +213,25 @@ export function SiteHeader() {
         </div>
       </div>
 
+      {searchOpen && (
+        <div className="border-t border-gray-100 bg-white px-4 py-3 md:hidden">
+          <form onSubmit={onSearch} className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <input
+              autoFocus
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search products..."
+              aria-label="Search products"
+              enterKeyHint="search"
+              className="h-11 w-full rounded-full border border-gray-200 bg-gray-50 pl-9 pr-4 text-base focus:border-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
+            />
+          </form>
+        </div>
+      )}
+
       {menuOpen && (
         <div className="border-t border-gray-100 bg-white px-4 pb-4 pt-2 lg:hidden">
-          <form onSubmit={onSearch} className="mb-3">
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search products..."
-                aria-label="Search products"
-                className="h-10 w-full rounded-full border border-gray-200 bg-gray-50 pl-9 pr-4 text-sm focus:border-primary focus:outline-none"
-              />
-            </div>
-          </form>
           <nav className="flex flex-col gap-1">
             {NAV_LINKS.map((link) => (
               <Link
