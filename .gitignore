@@ -54,3 +54,6 @@ AGENTS.md
 agent/
 .tooling/
 .tools/
+
+# design system (local only)
+design-system/
