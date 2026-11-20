@@ -38,7 +38,7 @@ public class MailService {
 
     private final String apiKey = env("RESEND_API_KEY", "");
     private final String from = env("MAIL_FROM", "NCWU StyleHub <info@shop.ncwu.site>");
-    private final String siteUrl = env("SITE_URL", "https://shop.ncwu.site");
+    private final String siteUrl = env("SITE_URL", "https://shop.ncwu.site").replaceAll("/+$", "");
     /** Store owner inbox that receives every contact-form submission. */
     private final String adminInbox = env("ADMIN_EMAIL", "miltonbabu9666@gmail.com");
 
@@ -211,19 +211,41 @@ public class MailService {
     }
 
     private String button(String label, String href) {
-        return "<p style=\"margin:24px 0;\"><a href=\"" + href + "\" style=\"background:#6d28d9;color:#fff;"
+        return "<p style=\"margin:28px 0;\"><a href=\"" + escape(href) + "\" style=\"background:#6d28d9;color:#fff;"
                 + "text-decoration:none;padding:12px 24px;border-radius:999px;font-weight:600;display:inline-block;\">"
                 + escape(label) + "</a></p>";
     }
 
     private String layout(String heading, String body) {
-        return "<div style=\"font-family:Segoe UI,Helvetica,Arial,sans-serif;color:#1e1b4b;max-width:560px;margin:0 auto;\">"
-                + "<h1 style=\"font-size:22px;margin:0 0 16px;\">" + escape(heading) + "</h1>"
+        String logoUrl = siteUrl + "/stylehub-mark.svg";
+        return "<!doctype html>"
+                + "<html lang=\"en\"><head><meta charset=\"utf-8\">"
+                + "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">"
+                + "<title>" + escape(heading) + "</title></head>"
+                + "<body style=\"margin:0;background:#f6f4fb;font-family:Arial,Helvetica,sans-serif;color:#1e1b4b;\">"
+                + "<div style=\"display:none;max-height:0;overflow:hidden;opacity:0;\">"
+                + escape(heading) + " from NCWU StyleHub</div>"
+                + "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" "
+                + "style=\"background:#f6f4fb;padding:32px 12px;\"><tr><td align=\"center\">"
+                + "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" "
+                + "style=\"max-width:580px;background:#fff;border-radius:20px;overflow:hidden;\">"
+                + "<tr><td style=\"background:#6d28d9;padding:28px 32px;text-align:center;\">"
+                + "<a href=\"" + escape(siteUrl) + "\" style=\"text-decoration:none;\">"
+                + "<img src=\"" + escape(logoUrl) + "\" width=\"56\" height=\"56\" "
+                + "alt=\"NCWU StyleHub\" style=\"display:block;margin:0 auto;border:0;border-radius:16px;\">"
+                + "<div style=\"margin-top:10px;font-size:24px;font-weight:700;letter-spacing:-.5px;color:#fff;\">"
+                + "StyleHub<span style=\"color:#67e8f9;\">.</span></div></a></td></tr>"
+                + "<tr><td style=\"padding:40px 34px;\">"
+                + "<h1 style=\"margin:0 0 18px;font-size:26px;line-height:1.25;color:#1e1b4b;\">"
+                + escape(heading) + "</h1>"
                 + body
-                + "<hr style=\"border:none;border-top:1px solid #eee;margin:28px 0;\" />"
-                + "<p class=\"muted\" style=\"font-size:12px;color:#8b8b96;\">NCWU StyleHub · NCWU Business Street, "
-                + "F1 2nd Floor · <a href=\"" + siteUrl + "\" style=\"color:#6d28d9;\">shop.ncwu.site</a></p>"
-                + "</div>";
+                + "</td></tr>"
+                + "<tr><td style=\"border-top:1px solid #eee;padding:24px 34px;text-align:center;\">"
+                + "<p style=\"margin:0 0 8px;font-size:13px;color:#8b8b96;\">Everyday style, considered.</p>"
+                + "<p style=\"margin:0;font-size:12px;color:#9ca3af;\">NCWU StyleHub · NCWU Business Street, F1 2nd Floor</p>"
+                + "<p style=\"margin:10px 0 0;font-size:12px;\"><a href=\"" + escape(siteUrl)
+                + "\" style=\"color:#6d28d9;text-decoration:none;\">Visit StyleHub</a></p>"
+                + "</td></tr></table></td></tr></table></body></html>";
     }
 
     private static String escape(String value) {
