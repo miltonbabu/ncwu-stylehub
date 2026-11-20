@@ -98,10 +98,19 @@ function SignInContent() {
           </p>
         </form>
 
-        <div className="mt-6 rounded-2xl bg-brand-soft p-4 text-xs text-brand-text/80">
-          <p className="font-semibold">Demo accounts</p>
-          <p className="mt-1">Admin: admin@shop.ncwu.site / admin@123</p>
-          <p>Customer: user@shop.ncwu.site / demo@123</p>
+        <div className="mt-6 rounded-2xl bg-brand-soft p-4 text-center text-sm text-brand-text/80">
+          <p>Want to explore the store first?</p>
+          <button
+            type="button"
+            onClick={() => {
+              setEmail("user@shop.ncwu.site");
+              setPassword("demo@123");
+              setError("");
+            }}
+            className="mt-2 cursor-pointer font-semibold text-primary hover:underline"
+          >
+            Use the demo account
+          </button>
         </div>
       </div>
     </div>
