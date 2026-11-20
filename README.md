@@ -6,7 +6,7 @@
 
 ### An online clothing store built for university systems development practice
 
-A responsive storefront and administration interface covering the journey from product discovery to order management.
+A full-stack online clothing store combining a responsive storefront, administration tools, a Java REST API, and a PostgreSQL database.
 
 ![Next.js](https://img.shields.io/badge/Next.js-16-171717?style=flat-square&logo=nextdotjs)
 ![React](https://img.shields.io/badge/React-19-149ECA?style=flat-square&logo=react&logoColor=white)
@@ -92,6 +92,66 @@ The intended deployment keeps the frontend on Vercel and runs the Java API behin
 | Image storage | Backend-signed Cloudinary uploads or persistent local uploads |
 
 Exact frontend dependency versions are declared in [`package.json`](package.json).
+
+## Backend
+
+The backend is implemented with **Java 21, Spring Boot, Maven, and Spring Data JPA**. It exposes REST endpoints under `/api/v1` and provides:
+
+- Registration, sign-in, JWT issuance, and role-based access for customers and administrators.
+- Product and category retrieval, product administration, stock management, and image uploads.
+- Order creation, order history, cancellation, and administrative status updates.
+- Review submission and moderation, wishlist operations, contact messages, and newsletter subscriptions.
+- Database persistence, request validation, password hashing, and API rate limiting.
+- Signed Cloudinary uploads, with local upload storage as a fallback.
+
+Backend source lives in `java-backend/` in the full project workspace, outside this frontend Git repository. With Java 21 and Maven installed, run these commands **from that backend directory**:
+
+```bash
+mvn spring-boot:run
+```
+
+To build and run the packaged API:
+
+```bash
+mvn package -DskipTests
+java -jar target/stylehub-api-1.0.0.jar
+```
+
+The default API port is `8080`. Set backend environment variables in the process or hosting platform. Without `DATABASE_URL`, the backend uses a local H2 file database; deployed instances should use the configured Supabase PostgreSQL database.
+
+## Database
+
+**Supabase hosts the PostgreSQL database.** Database access is performed by the Java backend through JDBC and JPA. Authentication uses the application's own user records and JWT implementation.
+
+The full project's `supabase/schema.sql` defines these areas:
+
+| Data area | Tables | Purpose |
+| --- | --- | --- |
+| Accounts | `users` | Customer and administrator records, roles, and password hashes |
+| Catalog | `categories`, `products`, `product_images` | Product classification, descriptions, stock, and image references |
+| Reviews | `reviews` | Product feedback and moderation |
+| Shopping | `cart_items`, `wishlists` | Schema support for cart records and saved products; the current frontend cart is browser-local |
+| Orders | `orders`, `order_items` | Order headers and purchased product lines |
+| Store content | `banners`, `promotions` | Homepage and promotional content |
+| Communication | `subscribers`, `contact_messages` | Newsletter subscriptions and customer inquiries |
+
+Configure the backend with the PostgreSQL connection details supplied by Supabase. The production deployment template uses the **Session pooler on port 5432** with SSL and separate database credentials. The backend currently uses Hibernate schema auto-update; back up existing data before deployment and review schema changes before applying them.
+
+The schema file and backend configuration are part of the full project workspace and are not included in this frontend repository.
+
+## Full Project Organization
+
+The development workspace separates the application into these parts:
+
+```text
+Online store web app/
+  frontend/       Next.js storefront and admin UI; this GitHub repository
+  java-backend/   Java Spring Boot REST API and Maven configuration
+  supabase/       PostgreSQL schema
+  deploy/aws/     EC2 Docker Compose, Nginx, HTTPS, and environment templates
+```
+
+The AWS package targets a **2 GB RAM EC2 instance** with only Java and Nginx running on the server. The frontend remains on Vercel and the database remains on Supabase. It includes a 512 MB Java heap, a 1 GB API container memory limit, persistent upload storage, health checks, restart policies, and log rotation. These are deployment settings, not a claim of tested production capacity.
 
 ## Getting Started
 
