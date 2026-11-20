@@ -23,6 +23,7 @@ import jakarta.persistence.PersistenceContext;
  * admin@shop.ncwu.site / admin@123 and user@shop.ncwu.site / demo@123
  */
 @Component
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "app.demo.enabled", havingValue = "true", matchIfMissing = true)
 public class SeedRunner implements CommandLineRunner {
 
     private static final String IMG = "https://images.unsplash.com/photo-%s?auto=format&fit=crop&w=900&q=70";

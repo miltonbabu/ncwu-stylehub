@@ -24,6 +24,7 @@ import jakarta.persistence.PersistenceContext;
  * Existing rows are renamed (not recreated) so their order history is preserved.
  */
 @Component
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "app.demo.enabled", havingValue = "true", matchIfMissing = true)
 public class DemoAccounts implements ApplicationRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DemoAccounts.class);
