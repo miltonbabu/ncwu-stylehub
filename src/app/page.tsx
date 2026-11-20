@@ -11,12 +11,20 @@ import { useEffect, useState } from "react";
 
 function ProductSkeleton() {
   return (
-    <div className="animate-pulse overflow-hidden rounded-2xl border border-gray-100">
-      <div className="aspect-[4/5] bg-gray-100" />
+    <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-smooth hover:shadow-md">
+      <div className="relative aspect-[4/5] overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+      </div>
       <div className="space-y-2.5 p-4">
-        <div className="h-3 w-1/3 rounded bg-gray-100" />
-        <div className="h-4 w-2/3 rounded bg-gray-100" />
-        <div className="h-5 w-1/4 rounded bg-gray-100" />
+        <div className="relative h-3 w-1/3 overflow-hidden rounded bg-gray-100">
+          <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent" />
+        </div>
+        <div className="relative h-4 w-2/3 overflow-hidden rounded bg-gray-100">
+          <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent" />
+        </div>
+        <div className="relative h-5 w-1/4 overflow-hidden rounded bg-gray-100">
+          <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent" />
+        </div>
       </div>
     </div>
   );

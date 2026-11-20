@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Banknote, Mail, MapPin, Phone } from "lucide-react";
 import { showComingSoon } from "@/components/coming-soon";
+import { BrandLogo } from "@/components/brand-logo";
 
 function FacebookIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -70,21 +71,12 @@ export function SiteFooter() {
     <footer className="bg-footer-gradient mt-12 border-t border-white/10 text-white">
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-9 sm:px-6 sm:py-10 md:grid-cols-4">
         <div>
-          <Link href="/" className="flex items-center gap-2">
-            <img
-              src="/stylehub-icon.png"
-              alt=""
-              width={32}
-              height={32}
-              className="h-8 w-8 rounded-full object-cover"
-            />
-            <span className="font-heading text-lg font-bold">
-              NCWU <span className="text-secondary">StyleHub</span>
-            </span>
+          <Link href="/" aria-label="NCWU StyleHub home" className="inline-flex rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">
+            <BrandLogo inverted />
           </Link>
           <p className="mt-3 text-sm leading-relaxed text-white/75">
-            Modern clothes for every occasion. Quality fabrics, honest prices and a shopping
-            experience you will love.
+            Everyday style, considered. Discover pieces you&apos;ll reach for again and again,
+            at prices that feel right.
           </p>
           <div className="mt-4 flex gap-2.5">
             <button

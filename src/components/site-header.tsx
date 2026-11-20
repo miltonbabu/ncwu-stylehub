@@ -1,5 +1,6 @@
 "use client";
 
+import { BrandLogo } from "@/components/brand-logo";
 import { useAuth } from "@/lib/auth-context";
 import { useCart } from "@/lib/cart-context";
 import { cn } from "@/lib/utils";
@@ -60,17 +61,8 @@ export function SiteHeader() {
           {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
 
-        <Link href="/" className="flex shrink-0 items-center gap-1.5 sm:gap-2" aria-label="NCWU StyleHub home">
-          <img
-            src="/stylehub-icon.png"
-            alt=""
-            width={36}
-            height={36}
-            className="h-7 w-7 rounded-full object-cover ring-1 ring-black/5 sm:h-9 sm:w-9"
-          />
-          <span className="font-heading text-base font-bold tracking-tight text-brand-text sm:text-xl">
-            NCWU <span className="text-primary">StyleHub</span>
-          </span>
+        <Link href="/" className="shrink-0 rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary" aria-label="NCWU StyleHub home">
+          <BrandLogo />
         </Link>
 
         <nav className="ml-6 hidden items-center gap-1 lg:flex">

@@ -18,7 +18,11 @@ const bricolage = Bricolage_Grotesque({
 const interTight = Inter_Tight({ subsets: ["latin"], variable: "--font-inter-tight", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "NCWU StyleHub — Modern Clothes Store",
+  title: "NCWU StyleHub — Everyday Style, Considered",
+  icons: {
+    icon: [{ url: "/stylehub-mark.svg", type: "image/svg+xml" }],
+    shortcut: "/stylehub-mark.svg",
+  },
   description:
     "Shop the latest fashion: t-shirts, dresses, jackets, jeans, shoes and accessories. Fast shipping, easy returns and secure checkout.",
 };

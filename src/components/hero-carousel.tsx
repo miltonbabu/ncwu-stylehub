@@ -94,8 +94,8 @@ export function HeroCarousel({ banners }: { banners?: Banner[] }) {
         <div
           key={slide.id}
           className={cn(
-            "absolute inset-0 transition-opacity duration-700 ease-in-out",
-            i === index ? "opacity-100" : "pointer-events-none opacity-0",
+            "absolute inset-0 transition-all duration-1000 ease-out",
+            i === index ? "opacity-100 scale-100" : "pointer-events-none opacity-0 scale-105",
           )}
           aria-hidden={i !== index}
         >
@@ -107,7 +107,7 @@ export function HeroCarousel({ banners }: { banners?: Banner[] }) {
             }}
             className="h-full w-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-brand-text/85 via-brand-text/45 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-brand-text/90 via-brand-text/50 to-transparent" />
           <div className="absolute inset-y-0 left-0 flex max-w-xl flex-col justify-center gap-4 p-6 sm:p-12 lg:p-16">
             <span className="w-fit rounded-full bg-accent px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider text-white sm:text-xs">
               Limited Time
@@ -119,13 +119,13 @@ export function HeroCarousel({ banners }: { banners?: Banner[] }) {
             <div className="flex flex-wrap gap-3 pt-1 sm:pt-2">
               <Link
                 href={slide.link_url}
-                className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-white transition-colors duration-200 hover:bg-primary-dark sm:h-12 sm:px-7 sm:text-base"
+                className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-white shadow-lg shadow-primary/30 transition-all duration-200 hover:bg-primary-dark hover:scale-105 hover:shadow-xl hover:shadow-primary/40 sm:h-12 sm:px-7 sm:text-base"
               >
                 Shop Now <ArrowRight className="h-4 w-4" aria-hidden />
               </Link>
               <Link
                 href="/shop"
-                className="inline-flex h-11 cursor-pointer items-center rounded-full border border-white/60 px-6 text-sm font-semibold text-white transition-colors duration-200 hover:bg-white/10 sm:h-12 sm:px-7 sm:text-base"
+                className="inline-flex h-11 cursor-pointer items-center rounded-full border-2 border-white/70 bg-white/10 px-6 text-sm font-semibold text-white backdrop-blur-sm transition-all duration-200 hover:bg-white/20 hover:border-white hover:scale-105 sm:h-12 sm:px-7 sm:text-base"
               >
                 Browse All
               </Link>
@@ -139,17 +139,17 @@ export function HeroCarousel({ banners }: { banners?: Banner[] }) {
         type="button"
         onClick={() => go(-1)}
         aria-label="Previous slide"
-        className="absolute left-4 top-1/2 hidden h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/85 text-brand-text shadow transition-colors hover:bg-white sm:flex"
+        className="absolute left-4 top-1/2 hidden h-12 w-12 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/90 text-brand-text shadow-lg backdrop-blur-sm transition-all hover:bg-white hover:scale-110 hover:shadow-xl sm:flex"
       >
-        <ChevronLeft className="h-5 w-5" />
+        <ChevronLeft className="h-6 w-6" />
       </button>
       <button
         type="button"
         onClick={() => go(1)}
         aria-label="Next slide"
-        className="absolute right-4 top-1/2 hidden h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/85 text-brand-text shadow transition-colors hover:bg-white sm:flex"
+        className="absolute right-4 top-1/2 hidden h-12 w-12 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/90 text-brand-text shadow-lg backdrop-blur-sm transition-all hover:bg-white hover:scale-110 hover:shadow-xl sm:flex"
       >
-        <ChevronRight className="h-5 w-5" />
+        <ChevronRight className="h-6 w-6" />
       </button>
 
       <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2 sm:bottom-5">
