@@ -111,7 +111,7 @@ export default function AccountPage() {
               <Heart className="h-4 w-4" /> Saved Items
             </Button>
           </Link>
-          {user.role === "admin" && (
+          {(user.role === "admin" || user.role === "demo_admin") && (
             <Link href="/admin">
               <Button variant="outline" className="w-full justify-start">
                 <LayoutDashboard className="h-4 w-4" /> Admin Panel

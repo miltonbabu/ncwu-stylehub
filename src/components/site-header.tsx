@@ -171,7 +171,7 @@ export function SiteHeader() {
                   >
                     <ShoppingBag className="h-4 w-4" /> My Orders
                   </Link>
-                  {user.role === "admin" && (
+                  {(user.role === "admin" || user.role === "demo_admin") && (
                     <Link
                       href="/admin"
                       onClick={() => setAccountOpen(false)}

@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   Store,
   Users,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -31,6 +32,8 @@ const NAV = [
   { href: "/admin/appearance", label: "Appearance", icon: Palette },
 ];
 
+const DEMO_ADMIN_NAV = new Set(["/admin", "/admin/products", "/admin/reviews", "/admin/appearance"]);
+
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -38,12 +41,15 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
-    if (ready && (!user || user.role !== "admin")) {
+    if (ready && (!user || (user.role !== "admin" && user.role !== "demo_admin"))) {
       router.replace("/auth/sign-in?next=/admin");
+    } else if (ready && user?.role === "demo_admin" && !DEMO_ADMIN_NAV.has(pathname)) {
+      router.replace("/admin");
     }
-  }, [ready, user, router]);
+  }, [ready, user, pathname, router]);
 
-  if (!ready || !user || user.role !== "admin") {
+  if (!ready || !user || (user.role !== "admin" && user.role !== "demo_admin")
+      || (user.role === "demo_admin" && !DEMO_ADMIN_NAV.has(pathname))) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -53,7 +59,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   const nav = (
     <nav className="flex flex-col gap-1">
-      {NAV.map((item) => {
+      {NAV.filter((item) => user.role === "admin" || DEMO_ADMIN_NAV.has(item.href)).map((item) => {
         const active = item.href === "/admin" ? pathname === "/admin" : pathname.startsWith(item.href);
         return (
           <Link
@@ -113,15 +119,45 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       {mobileOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
           <div className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
-          <aside className="absolute inset-y-0 left-0 w-64 bg-brand-text px-4 py-6">
-            <p className="mb-6 px-2 font-heading text-lg font-bold text-white">Admin Panel</p>
+          <aside className="absolute inset-y-0 left-0 flex w-[min(86vw,20rem)] flex-col overflow-y-auto bg-brand-text px-4 py-5">
+            <div className="mb-5 flex items-center justify-between px-2">
+              <p className="font-heading text-lg font-bold text-white">Admin Panel</p>
+              <button
+                type="button"
+                onClick={() => setMobileOpen(false)}
+                className="cursor-pointer rounded-lg p-2 text-brand-tint/80 hover:bg-white/10 hover:text-white"
+                aria-label="Close admin menu"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
             {nav}
+            <div className="mt-auto space-y-1 border-t border-white/10 pt-4">
+              <Link
+                href="/"
+                onClick={() => setMobileOpen(false)}
+                className="flex cursor-pointer items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-brand-tint/80 transition-colors hover:bg-white/10 hover:text-white"
+              >
+                <Store className="h-5 w-5" /> View Store
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileOpen(false);
+                  logout();
+                  router.push("/");
+                }}
+                className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-brand-tint/80 transition-colors hover:bg-white/10 hover:text-white"
+              >
+                <LogOut className="h-5 w-5" /> Sign Out
+              </button>
+            </div>
           </aside>
         </div>
       )}
 
-      <div className="flex min-h-screen flex-1 flex-col lg:pl-64">
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-gray-200 bg-white/90 px-6 backdrop-blur">
+      <div className="flex min-h-screen min-w-0 flex-1 flex-col lg:pl-64">
+        <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-gray-200 bg-white/90 px-3 backdrop-blur sm:gap-4 sm:px-6">
           <button
             type="button"
             className="cursor-pointer rounded-lg p-2 hover:bg-gray-100 lg:hidden"
@@ -131,9 +167,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             <ClipboardList className="h-5 w-5" />
           </button>
           <div className="ml-auto flex items-center gap-3">
-            <ThemePicker />
+            {user.role === "admin" && <ThemePicker />}
             <span className="hidden items-center gap-1.5 rounded-full bg-brand-soft px-3 py-1.5 text-xs font-semibold text-primary sm:flex">
-              <ShieldCheck className="h-3.5 w-3.5" /> Admin Mode
+              <ShieldCheck className="h-3.5 w-3.5" /> {user.role === "admin" ? "Admin Mode" : "Demo - Read Only"}
             </span>
             <div className="flex items-center gap-2">
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white">
@@ -141,12 +177,12 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               </span>
               <div className="hidden sm:block">
                 <p className="text-sm font-semibold leading-tight text-brand-text">{user.name}</p>
-                <p className="text-[11px] text-gray-400">Administrator</p>
+                <p className="text-[11px] text-gray-400">{user.role === "admin" ? "Administrator" : "Read-only demo"}</p>
               </div>
             </div>
           </div>
         </header>
-        <div className="flex-1 p-6 lg:p-8">{children}</div>
+        <div className="min-w-0 flex-1 p-3 sm:p-6 lg:p-8">{children}</div>
       </div>
     </div>
   );

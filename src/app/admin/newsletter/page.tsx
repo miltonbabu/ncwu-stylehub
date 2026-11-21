@@ -59,7 +59,7 @@ export default function AdminNewsletterPage() {
         />
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-gray-100 bg-white">
+      <div className="hidden overflow-x-auto rounded-2xl border border-gray-100 bg-white md:block">
         <table className="w-full min-w-[640px] text-left text-sm">
           <thead>
             <tr className="border-b border-gray-100 text-xs uppercase tracking-wide text-gray-400">
@@ -121,6 +121,40 @@ export default function AdminNewsletterPage() {
             )}
           </tbody>
         </table>
+      </div>
+
+      <div className="space-y-3 md:hidden">
+        {loading ? (
+          Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-24 animate-pulse rounded-xl bg-gray-100" />)
+        ) : filtered.length === 0 ? (
+          <div className="rounded-xl border border-gray-100 bg-white px-4 py-10 text-center text-sm text-gray-500">
+            {subscribers.length === 0 ? "No club members yet." : "No members match that search."}
+          </div>
+        ) : filtered.map((sub) => (
+          <article key={sub.id} className="rounded-xl border border-gray-100 bg-white p-3 shadow-sm">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="break-all text-sm font-semibold text-brand-text">{sub.email}</p>
+                <p className="mt-1 text-xs text-gray-500">Joined {formatDate(sub.created_at)}</p>
+              </div>
+              <button
+                type="button"
+                disabled={busyId === sub.id}
+                onClick={() => remove(sub.id)}
+                aria-label={`Remove ${sub.email}`}
+                className="inline-flex shrink-0 cursor-pointer items-center rounded-lg border border-red-200 p-2 text-red-600 disabled:opacity-40"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="mt-3 flex items-center justify-between gap-2 border-t border-gray-100 pt-2 text-xs text-gray-500">
+              <span className="truncate">Source: {sub.source}</span>
+              <span className={sub.is_active ? "font-semibold text-emerald-700" : "font-semibold text-gray-500"}>
+                {sub.is_active ? "Active" : "Inactive"}
+              </span>
+            </div>
+          </article>
+        ))}
       </div>
     </div>
   );

@@ -16,12 +16,10 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
 /**
- * Keeps the documented demo logins valid on every startup and removes the old accounts.
+ * Keeps the demo customer valid on every startup and removes old test accounts.
  *
- *   Admin    admin@shop.ncwu.site / admin@123
  *   Customer user@shop.ncwu.site  / demo@123
  *
- * Existing rows are renamed (not recreated) so their order history is preserved.
  */
 @Component
 @org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "app.demo.enabled", havingValue = "true", matchIfMissing = true)
@@ -29,8 +27,6 @@ public class DemoAccounts implements ApplicationRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DemoAccounts.class);
 
-    private static final String ADMIN_EMAIL = "admin@shop.ncwu.site";
-    private static final String ADMIN_PASSWORD = "admin@123";
     private static final String USER_EMAIL = "user@shop.ncwu.site";
     private static final String USER_PASSWORD = "demo@123";
 
@@ -45,25 +41,13 @@ public class DemoAccounts implements ApplicationRunner {
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
-        ensureDemo("Store Admin", ADMIN_EMAIL, ADMIN_PASSWORD, "admin", "admin@ncwustylehub.com");
-        ensureDemo("Demo Customer", USER_EMAIL, USER_PASSWORD, "customer", "demo@ncwustylehub.com");
+        ensureDemo("Demo Customer", USER_EMAIL, USER_PASSWORD, "customer");
         removeTestAccounts();
     }
 
-    /** Renames the legacy demo row (keeping its orders) or creates the account when missing. */
-    private void ensureDemo(String name, String email, String password, String role, String legacyEmail) {
+    private void ensureDemo(String name, String email, String password, String role) {
         User target = find(email);
         if (target == null) {
-            User legacy = find(legacyEmail);
-            if (legacy != null) {
-                legacy.email = email;
-                legacy.name = name;
-                legacy.role = role;
-                legacy.isActive = true;
-                legacy.passwordHash = PasswordHasher.hash(password);
-                log.info("Renamed demo account {} -> {}.", legacyEmail, email);
-                return;
-            }
             target = new User();
             target.name = name;
             target.email = email;

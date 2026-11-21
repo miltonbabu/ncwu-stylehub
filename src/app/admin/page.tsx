@@ -3,6 +3,7 @@
 import { ProfitChart, type ProfitPoint } from "@/components/admin/profit-chart";
 import { Badge } from "@/components/ui/badge";
 import { api, fetchAdminAnalytics } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 import type { AdminAnalytics, Review } from "@/lib/types";
 import { cn, formatPrice } from "@/lib/utils";
 import {
@@ -23,6 +24,8 @@ import { useEffect, useMemo, useState } from "react";
 const RANGES = [7, 30, 90];
 
 export default function AdminDashboard() {
+  const { user } = useAuth();
+  const canManage = user?.role === "admin";
   const [analytics, setAnalytics] = useState<AdminAnalytics | null>(null);
   const [pending, setPending] = useState<Review[]>([]);
   const [range, setRange] = useState(7);
@@ -111,8 +114,10 @@ export default function AdminDashboard() {
 
   const quickStats = [
     { label: "Products", value: analytics?.products ?? 0, icon: Package, href: "/admin/products" },
-    { label: "Users", value: analytics?.users ?? 0, icon: Users, href: "/admin/users" },
-    { label: "Club Members", value: analytics?.subscribers ?? 0, icon: Mails, href: "/admin/newsletter" },
+    ...(canManage ? [
+      { label: "Users", value: analytics?.users ?? 0, icon: Users, href: "/admin/users" },
+      { label: "Club Members", value: analytics?.subscribers ?? 0, icon: Mails, href: "/admin/newsletter" },
+    ] : []),
     { label: "Pending Reviews", value: analytics?.pending_reviews ?? 0, icon: MessageSquare, href: "/admin/reviews" },
     { label: "Low Stock", value: analytics?.low_stock ?? 0, icon: AlertTriangle, href: "/admin/products" },
   ];
@@ -128,12 +133,12 @@ export default function AdminDashboard() {
           <span className="hidden rounded-full bg-brand-soft px-3 py-1.5 text-xs font-semibold text-primary sm:inline">
             Real order data
           </span>
-          <Link
+          {canManage && <Link
             href="/admin/orders"
             className="inline-flex items-center gap-1.5 rounded-full bg-brand-gradient px-4 py-2 text-xs font-semibold text-white shadow-sm"
           >
             Manage Orders <ArrowUpRight className="h-3.5 w-3.5" />
-          </Link>
+          </Link>}
         </div>
       </div>
 
@@ -328,7 +333,7 @@ export default function AdminDashboard() {
           )}
         </section>
 
-        <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+        {canManage && <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
           <h2 className="font-heading text-lg font-bold text-brand-text">Quick Actions</h2>
           <div className="mt-4 grid grid-cols-2 gap-3">
             <Link
@@ -356,7 +361,7 @@ export default function AdminDashboard() {
               Change Theme
             </Link>
           </div>
-        </section>
+        </section>}
       </div>
     </div>
   );

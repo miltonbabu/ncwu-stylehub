@@ -90,7 +90,7 @@ export default function AdminOrdersPage() {
         />
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-gray-100 bg-white">
+      <div className="hidden overflow-x-auto rounded-2xl border border-gray-100 bg-white md:block">
         <table className="w-full min-w-[1100px] text-left text-sm">
           <thead>
             <tr className="border-b border-gray-100 text-xs uppercase tracking-wide text-gray-400">
@@ -207,6 +207,79 @@ export default function AdminOrdersPage() {
             )}
           </tbody>
         </table>
+      </div>
+
+      <div className="space-y-3 md:hidden">
+        {loading ? (
+          Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-48 animate-pulse rounded-xl bg-gray-100" />)
+        ) : filtered.length === 0 ? (
+          <div className="rounded-xl border border-gray-100 bg-white px-4 py-10 text-center text-sm text-gray-500">No orders found.</div>
+        ) : filtered.map((order) => {
+          const draft = trackingDraft[order.id] ?? order.tracking_number ?? "";
+          return (
+            <article key={order.id} className="rounded-xl border border-gray-100 bg-white p-3 shadow-sm">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-bold text-brand-text">Order #{order.id}</p>
+                  <p className="mt-0.5 text-xs text-gray-500">{formatDate(order.created_at)} · {paymentLabel(order.payment_method)}</p>
+                </div>
+                <p className="shrink-0 text-sm font-bold text-brand-text">{formatPrice(order.total)}</p>
+              </div>
+              <div className="mt-3 border-t border-gray-100 pt-3">
+                <p className="text-sm font-semibold text-brand-text">{order.shipping_name}</p>
+                <p className="mt-0.5 break-words text-xs text-gray-500">{order.shipping_address}</p>
+                <ul className="mt-2 space-y-1">
+                  {order.items.map((item) => (
+                    <li key={item.id} className="text-xs text-gray-600">
+                      {item.product_name}{item.size ? ` · ${item.size}` : ""} · {item.quantity} × {formatPrice(item.unit_price)}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="mt-3 grid grid-cols-1 gap-2 border-t border-gray-100 pt-3 sm:grid-cols-2">
+                <label className="text-xs font-medium text-gray-500">
+                  Status
+                  <select
+                    value={order.status}
+                    disabled={busyId === order.id}
+                    onChange={(e) => saveOrder(order, { status: e.target.value })}
+                    aria-label={`Update status for order ${order.id}`}
+                    className="mt-1 h-10 w-full cursor-pointer rounded-lg border border-gray-200 bg-white px-2 text-sm text-brand-text focus:border-primary focus:outline-none disabled:opacity-50"
+                  >
+                    {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </label>
+                <label className="text-xs font-medium text-gray-500">
+                  Tracking number
+                  <span className="mt-1 flex gap-2">
+                    <input
+                      value={draft}
+                      onChange={(e) => setTrackingDraft((prev) => ({ ...prev, [order.id]: e.target.value }))}
+                      placeholder="Tracking #"
+                      aria-label={`Tracking number for order ${order.id}`}
+                      className="h-10 min-w-0 flex-1 rounded-lg border border-gray-200 px-2 text-sm text-brand-text focus:border-primary focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      disabled={busyId === order.id || draft === (order.tracking_number ?? "")}
+                      onClick={() => saveOrder(order, { tracking_number: draft })}
+                      className="cursor-pointer rounded-lg border border-gray-200 px-3 text-xs font-semibold text-gray-600 disabled:opacity-40"
+                    >Save</button>
+                  </span>
+                </label>
+              </div>
+              <div className="mt-2 flex justify-end">
+                <button
+                  type="button"
+                  disabled={busyId === order.id}
+                  onClick={() => deleteOrder(order.id)}
+                  aria-label={`Delete order ${order.id}`}
+                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-red-200 px-2.5 py-1.5 text-xs font-medium text-red-600 disabled:opacity-40"
+                ><Trash2 className="h-3.5 w-3.5" /> Delete order</button>
+              </div>
+            </article>
+          );
+        })}
       </div>
     </div>
   );

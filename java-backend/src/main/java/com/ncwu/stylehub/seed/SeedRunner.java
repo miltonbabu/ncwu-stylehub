@@ -7,6 +7,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ncwu.stylehub.config.Env;
 import com.ncwu.stylehub.domain.Banner;
 import com.ncwu.stylehub.domain.Category;
 import com.ncwu.stylehub.domain.Product;
@@ -19,8 +20,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
 /**
- * Seeds demo data on first startup (identical to the Python backend seed):
- * admin@shop.ncwu.site / admin@123 and user@shop.ncwu.site / demo@123
+ * Seeds demo data on first startup without creating a full-privilege administrator.
  */
 @Component
 @org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "app.demo.enabled", havingValue = "true", matchIfMissing = true)
@@ -50,24 +50,16 @@ public class SeedRunner implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
-        Long userCount = em.createQuery("SELECT COUNT(u) FROM User u", Long.class).getSingleResult();
-        if (userCount != null && userCount > 0) {
+        Long productCount = em.createQuery("SELECT COUNT(p) FROM Product p", Long.class).getSingleResult();
+        if (productCount != null && productCount > 0) {
             return;
         }
 
-        User admin = new User();
-        admin.name = "Store Admin";
-        admin.email = "admin@shop.ncwu.site";
-        admin.passwordHash = PasswordHasher.hash("admin@123");
-        admin.role = "admin";
-        em.persist(admin);
+        String demoAdminEmail = Env.get("DEMO_ADMIN_EMAIL", "demo-admin@shop.ncwu.site");
+        User admin = findOrCreateUser("Demo Admin", demoAdminEmail,
+                Env.get("DEMO_ADMIN_PASSWORD", "demo-admin@123"), "demo_admin");
 
-        User demo = new User();
-        demo.name = "Demo Customer";
-        demo.email = "user@shop.ncwu.site";
-        demo.passwordHash = PasswordHasher.hash("demo@123");
-        demo.role = "customer";
-        em.persist(demo);
+        User demo = findOrCreateUser("Demo Customer", "user@shop.ncwu.site", "demo@123", "customer");
 
         Map<String, Category> categories = new HashMap<>();
         String[][] catRows = {
@@ -187,5 +179,23 @@ public class SeedRunner implements CommandLineRunner {
             r.status = (String) row[3];
             em.persist(r);
         }
+    }
+
+    private User findOrCreateUser(String name, String email, String password, String role) {
+        User user = em.createQuery("SELECT u FROM User u WHERE u.email = :email", User.class)
+                .setParameter("email", email)
+                .getResultStream()
+                .findFirst()
+                .orElse(null);
+        if (user != null) {
+            return user;
+        }
+        user = new User();
+        user.name = name;
+        user.email = email;
+        user.passwordHash = PasswordHasher.hash(password);
+        user.role = role;
+        em.persist(user);
+        return user;
     }
 }

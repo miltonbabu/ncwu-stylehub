@@ -84,7 +84,7 @@ export default function AdminMessagesPage() {
             Messages sent from the storefront contact form. Each one is also emailed to the admin inbox.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="inline-flex items-center gap-2 rounded-full bg-brand-soft px-4 py-2 text-sm font-semibold text-primary">
             <Mail className="h-4 w-4" /> {messages.length} total
             {unread > 0 && <span className="rounded-full bg-accent px-2 py-0.5 text-xs text-white">{unread} new</span>}
@@ -127,7 +127,7 @@ export default function AdminMessagesPage() {
           </div>
         ) : (
           <>
-            <div className="flex items-center gap-3 border-b border-gray-100 bg-gray-50/70 px-5 py-3">
+            <div className="flex items-center gap-3 border-b border-gray-100 bg-gray-50/70 px-3 py-3 sm:px-5">
               <input
                 type="checkbox"
                 checked={allSelected}
@@ -144,7 +144,7 @@ export default function AdminMessagesPage() {
                 const isOpen = openId === msg.id;
                 return (
                   <li key={msg.id} className={msg.is_read ? "" : "bg-primary/[0.035]"}>
-                    <div className="flex items-start gap-3 px-5 py-3.5">
+                    <div className="flex items-start gap-2 px-3 py-3.5 sm:gap-3 sm:px-5">
                       <input
                         type="checkbox"
                         checked={selected.includes(msg.id)}
@@ -170,7 +170,7 @@ export default function AdminMessagesPage() {
                               New
                             </span>
                           )}
-                          <span className="ml-auto shrink-0 text-xs text-gray-400">
+                          <span className="ml-auto shrink-0 text-[10px] text-gray-400 sm:text-xs">
                             {formatDate(msg.created_at)}
                           </span>
                         </div>

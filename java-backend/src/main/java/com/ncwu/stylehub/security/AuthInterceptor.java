@@ -12,7 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 /**
  * Bearer-token guard mirroring the Python backend dependencies:
  * public catalog reads, /auth/register + /auth/login are open;
- * everything else needs a valid JWT; /api/v1/admin/** additionally needs role=admin.
+ * everything else needs a valid JWT; /api/v1/admin/** requires an admin role.
  */
 @Component
 public class AuthInterceptor implements HandlerInterceptor {
@@ -43,8 +43,15 @@ public class AuthInterceptor implements HandlerInterceptor {
             Claims claims = jwtService.parse(header.substring(7));
             long userId = Long.parseLong(claims.getSubject());
             String role = claims.get("role", String.class);
-            if (path.startsWith("/api/v1/admin") && !"admin".equals(role)) {
-                throw new ApiException(403, "Admin access required");
+            if (path.startsWith("/api/v1/admin")) {
+                if ("admin".equals(role)) {
+                    request.setAttribute(ATTR_USER_ID, userId);
+                    request.setAttribute(ATTR_ROLE, role);
+                    return true;
+                }
+                if (!isDemoAdminRead(method, path, role)) {
+                    throw new ApiException(403, "Admin access required");
+                }
             }
             request.setAttribute(ATTR_USER_ID, userId);
             request.setAttribute(ATTR_ROLE, role);
@@ -54,6 +61,17 @@ public class AuthInterceptor implements HandlerInterceptor {
         } catch (Exception e) {
             throw new ApiException(401, "Could not validate credentials");
         }
+    }
+
+    private boolean isDemoAdminRead(String method, String path, String role) {
+        if (!"demo_admin".equals(role) || !"GET".equals(method)) {
+            return false;
+        }
+        return path.equals("/api/v1/admin/products")
+                || path.matches("/api/v1/admin/products/\\d+")
+                || path.equals("/api/v1/admin/reviews")
+                || path.equals("/api/v1/admin/stats")
+                || path.equals("/api/v1/admin/analytics");
     }
 
     private boolean isPublic(String method, String path) {

@@ -2,6 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { api } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 import type { Review } from "@/lib/types";
 import { cn, formatDate } from "@/lib/utils";
 import { Check, Trash2, X } from "lucide-react";
@@ -15,6 +16,8 @@ const FILTERS = [
 ];
 
 export default function AdminReviewsPage() {
+  const { user } = useAuth();
+  const canModerate = user?.role === "admin";
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("pending");
@@ -65,7 +68,7 @@ export default function AdminReviewsPage() {
     <div>
       <div className="mb-6">
         <h1 className="font-heading text-2xl font-bold text-brand-text">Review Management</h1>
-        <p className="mt-1 text-sm text-gray-500">Moderate customer product reviews before they go live.</p>
+        <p className="mt-1 text-sm text-gray-500">{canModerate ? "Moderate customer product reviews before they go live." : "Review the customer feedback queue."}</p>
       </div>
 
       <div className="mb-5 flex flex-wrap gap-2">
@@ -125,9 +128,9 @@ export default function AdminReviewsPage() {
                     </Badge>
                     <span className="text-xs text-gray-400">{formatDate(review.created_at)}</span>
                   </div>
-                  <p className="mt-2 text-sm leading-relaxed text-gray-600">{review.comment}</p>
+                  <p className="mt-2 break-words text-sm leading-relaxed text-gray-600">{review.comment}</p>
                 </div>
-                <div className="flex gap-2">
+                {canModerate && <div className="flex flex-wrap gap-2">
                   {review.status !== "approved" && (
                     <button
                       type="button"
@@ -156,7 +159,7 @@ export default function AdminReviewsPage() {
                   >
                     <Trash2 className="h-3.5 w-3.5" /> Delete
                   </button>
-                </div>
+                </div>}
               </div>
             </li>
           ))}

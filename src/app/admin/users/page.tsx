@@ -132,7 +132,7 @@ export default function AdminUsersPage() {
         />
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-gray-100 bg-white">
+      <div className="hidden overflow-x-auto rounded-2xl border border-gray-100 bg-white md:block">
         <table className="w-full min-w-[760px] text-left text-sm">
           <thead>
             <tr className="border-b border-gray-100 text-xs uppercase tracking-wide text-gray-400">
@@ -221,9 +221,53 @@ export default function AdminUsersPage() {
         </table>
       </div>
 
+      <div className="space-y-3 md:hidden">
+        {loading ? (
+          Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-32 animate-pulse rounded-xl bg-gray-100" />)
+        ) : filtered.length === 0 ? (
+          <div className="rounded-xl border border-gray-100 bg-white px-4 py-10 text-center text-sm text-gray-500">No users found.</div>
+        ) : filtered.map((u) => (
+          <article key={u.id} className="rounded-xl border border-gray-100 bg-white p-3 shadow-sm">
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 font-semibold text-primary">
+                {u.name.charAt(0).toUpperCase()}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-brand-text">{u.name}{me?.id === u.id ? " (you)" : ""}</p>
+                <p className="truncate text-xs text-gray-500">{u.email}</p>
+              </div>
+              <Badge tone={u.role === "admin" ? "accent" : "primary"}>{u.role}</Badge>
+            </div>
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-gray-100 pt-3">
+              <div className="flex items-center gap-2 text-xs text-gray-500">
+                <span>{formatDate(u.created_at)}</span>
+                <Badge tone={u.is_active ? "green" : "red"}>{u.is_active ? "Active" : "Disabled"}</Badge>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                <button type="button" disabled={busyId === u.id || me?.id === u.id}
+                  onClick={() => updateUser(u.id, { role: u.role === "admin" ? "customer" : "admin" })}
+                  className="inline-flex cursor-pointer items-center gap-1 rounded-lg border border-gray-200 px-2 py-1.5 text-[11px] font-medium text-gray-600 disabled:opacity-40">
+                  <ShieldCheck className="h-3.5 w-3.5" /> {u.role === "admin" ? "Demote" : "Make Admin"}
+                </button>
+                <button type="button" disabled={busyId === u.id || me?.id === u.id}
+                  onClick={() => updateUser(u.id, { is_active: !u.is_active })}
+                  className="inline-flex cursor-pointer items-center gap-1 rounded-lg border border-gray-200 px-2 py-1.5 text-[11px] font-medium text-gray-600 disabled:opacity-40">
+                  <UserCog className="h-3.5 w-3.5" /> {u.is_active ? "Disable" : "Enable"}
+                </button>
+                <button type="button" disabled={busyId === u.id || me?.id === u.id} onClick={() => deleteUser(u.id)}
+                  aria-label={`Delete ${u.name}`} title="Delete user permanently"
+                  className="inline-flex cursor-pointer items-center rounded-lg border border-red-200 p-1.5 text-red-600 disabled:opacity-40">
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+
       {showCreate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+          <div className="max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-4 shadow-2xl sm:p-6">
             <div className="flex items-start justify-between">
               <div>
                 <h2 className="font-heading text-lg font-bold text-brand-text">Create User</h2>

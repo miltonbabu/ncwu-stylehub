@@ -29,7 +29,7 @@ function SignInContent() {
       } catch {
         /* storage unavailable — skip the welcome flash */
       }
-      router.push(user.role === "admin" && next === "/" ? "/admin" : next);
+      router.push((user.role === "admin" || user.role === "demo_admin") && next === "/" ? "/admin" : next);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign in failed");
     } finally {
@@ -116,14 +116,14 @@ function SignInContent() {
             <button
               type="button"
               onClick={() => {
-                setEmail("admin@shop.ncwu.site");
-                setPassword("admin@123");
+                setEmail("demo-admin@shop.ncwu.site");
+                setPassword("demo-admin@123");
                 setError("");
               }}
               className="cursor-pointer rounded-xl border border-white/70 bg-white px-3 py-2.5 text-left text-xs font-semibold text-brand-text shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary hover:text-primary"
             >
               <span className="block text-sm">Demo admin</span>
-              <span className="mt-0.5 block text-[11px] font-normal text-gray-500">Open the admin panel</span>
+              <span className="mt-0.5 block text-[11px] font-normal text-gray-500">Explore read-only admin</span>
             </button>
           </div>
         </div>
