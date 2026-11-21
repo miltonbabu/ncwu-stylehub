@@ -5,6 +5,7 @@ import { ComingSoonToast } from "@/components/coming-soon";
 import { MobileTabs } from "@/components/mobile-tabs";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { ThemeSync } from "@/components/theme-sync";
 import { WelcomeBanner } from "@/components/welcome-banner";
 import { AuthProvider } from "@/lib/auth-context";
 import { CartProvider } from "@/lib/cart-context";
@@ -39,6 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         <AuthProvider>
           <CartProvider>
+            <ThemeSync />
             <WelcomeBanner />
             <AnnouncementBar />
             <SiteHeader />

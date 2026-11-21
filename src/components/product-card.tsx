@@ -2,7 +2,7 @@
 
 import type { Product } from "@/lib/types";
 import { cn, formatPrice, imgFallback, cloudinaryImg } from "@/lib/utils";
-import { Eye, ShoppingBag } from "lucide-react";
+import { Eye, Plus } from "lucide-react";
 import Link from "next/link";
 import { useCart } from "@/lib/cart-context";
 import { Badge } from "./ui/badge";
@@ -68,12 +68,13 @@ export function ProductCard({ product, className }: { product: Product; classNam
             onClick={onAdd}
             disabled={product.stock <= 0}
             className={cn(
-              "flex h-9 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full text-xs font-semibold text-white shadow-lg transition-all disabled:opacity-50 sm:h-10 sm:text-sm hover:scale-105",
+              "flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-xs font-semibold text-white shadow-lg transition-all disabled:opacity-50 hover:scale-110 sm:h-10 sm:w-auto sm:flex-1 sm:gap-1.5 sm:rounded-full sm:text-sm",
               added ? "bg-emerald-600 shadow-emerald-500/40" : "bg-primary hover:bg-primary-dark shadow-primary/30",
             )}
+            aria-label={added ? `${product.name} added to cart` : `Add ${product.name} to cart`}
           >
-            <ShoppingBag className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden />
-            {added ? "Added!" : "Add to Cart"}
+            {added ? <span className="text-base leading-none">✓</span> : <Plus className="h-5 w-5" aria-hidden />}
+            <span className="hidden sm:inline">{added ? "Added!" : "Add to Cart"}</span>
           </button>
           <Link
             href={`/product/${product.id}`}

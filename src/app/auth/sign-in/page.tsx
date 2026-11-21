@@ -38,17 +38,17 @@ function SignInContent() {
   };
 
   return (
-    <div className="flex min-h-[75vh] items-center justify-center px-4 py-14">
+    <div className="flex min-h-[calc(100vh-5rem)] items-center justify-center px-3 py-8 sm:min-h-[75vh] sm:px-4 sm:py-14">
       <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-white">
-            <Store className="h-7 w-7" />
+        <div className="mb-5 text-center sm:mb-8">
+          <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-white sm:h-14 sm:w-14">
+            <Store className="h-6 w-6 sm:h-7 sm:w-7" />
           </span>
-          <h1 className="mt-5 font-heading text-3xl font-bold text-brand-text">Welcome Back</h1>
-          <p className="mt-2 text-sm text-gray-500">Sign in to your NCWU StyleHub account</p>
+          <h1 className="mt-3 font-heading text-2xl font-bold text-brand-text sm:mt-5 sm:text-3xl">Welcome Back</h1>
+          <p className="mt-1 text-xs text-gray-500 sm:mt-2 sm:text-sm">Sign in to your NCWU StyleHub account</p>
         </div>
 
-        <form onSubmit={onSubmit} className="space-y-5 rounded-3xl border border-gray-100 bg-white p-8 shadow-sm">
+        <form onSubmit={onSubmit} className="space-y-4 rounded-3xl border border-gray-100 bg-white p-5 shadow-sm sm:space-y-5 sm:p-8">
           <Field label="Email Address" htmlFor="si-email">
             <Input
               id="si-email"
@@ -98,19 +98,34 @@ function SignInContent() {
           </p>
         </form>
 
-        <div className="mt-6 rounded-2xl bg-brand-soft p-4 text-center text-sm text-brand-text/80">
-          <p>Want to explore the store first?</p>
-          <button
-            type="button"
-            onClick={() => {
-              setEmail("user@shop.ncwu.site");
-              setPassword("demo@123");
-              setError("");
-            }}
-            className="mt-2 cursor-pointer font-semibold text-primary hover:underline"
-          >
-            Use the demo account
-          </button>
+        <div className="mt-4 rounded-2xl border border-primary/10 bg-brand-soft/80 p-3 sm:mt-6 sm:p-4">
+          <p className="text-center text-xs font-semibold uppercase tracking-[0.16em] text-brand-text/60">Quick demo access</p>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => {
+                setEmail("user@shop.ncwu.site");
+                setPassword("demo@123");
+                setError("");
+              }}
+              className="cursor-pointer rounded-xl border border-white/70 bg-white px-3 py-2.5 text-left text-xs font-semibold text-brand-text shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary hover:text-primary"
+            >
+              <span className="block text-sm">Demo customer</span>
+              <span className="mt-0.5 block text-[11px] font-normal text-gray-500">Browse and shop</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setEmail("admin@shop.ncwu.site");
+                setPassword("admin@123");
+                setError("");
+              }}
+              className="cursor-pointer rounded-xl border border-white/70 bg-white px-3 py-2.5 text-left text-xs font-semibold text-brand-text shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary hover:text-primary"
+            >
+              <span className="block text-sm">Demo admin</span>
+              <span className="mt-0.5 block text-[11px] font-normal text-gray-500">Open the admin panel</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

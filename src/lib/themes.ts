@@ -93,6 +93,7 @@ export function applyTheme(id: string) {
   requestAnimationFrame(() => root.classList.remove("theme-switching"));
   try {
     window.localStorage.setItem(THEME_STORAGE_KEY, id);
+    window.dispatchEvent(new CustomEvent("stylehub-theme-change", { detail: id }));
   } catch {
     /* storage can be blocked in private mode — theme still applies for this visit */
   }
