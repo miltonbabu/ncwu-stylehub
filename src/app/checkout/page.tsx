@@ -52,7 +52,8 @@ export default function CheckoutPage() {
           shipping_address: address,
           shipping_phone: phone,
           payment_method: payment,
-          items: items.map((l) => ({ product_id: l.product.id, quantity: l.quantity, size: l.size || null })),
+          items: items.map((l) => ({ product_id: l.product.id, variant_id: l.variant_id, quantity: l.quantity,
+            style: l.style || null, size: l.size || null })),
         }),
       });
       setPlaced(order);

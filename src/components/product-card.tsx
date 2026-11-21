@@ -4,6 +4,7 @@ import type { Product } from "@/lib/types";
 import { cn, formatPrice, imgFallback, cloudinaryImg } from "@/lib/utils";
 import { Eye, Plus } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cart-context";
 import { Badge } from "./ui/badge";
 import { StarRating } from "./star-rating";
@@ -11,6 +12,7 @@ import { useState } from "react";
 
 export function ProductCard({ product, className }: { product: Product; className?: string }) {
   const { add } = useCart();
+  const router = useRouter();
   const [added, setAdded] = useState(false);
   const [src, setSrc] = useState(cloudinaryImg(product.image_url, { width: 640, height: 800 }));
   const srcSet = product.image_url
@@ -28,6 +30,10 @@ export function ProductCard({ product, className }: { product: Product; classNam
     e.preventDefault();
     e.stopPropagation();
     if (product.stock <= 0) return;
+    if (product.variants?.length) {
+      router.push(`/product/${product.id}`);
+      return;
+    }
     add(product, 1);
     setAdded(true);
     setTimeout(() => setAdded(false), 1200);
@@ -101,7 +107,7 @@ export function ProductCard({ product, className }: { product: Product; classNam
           <span className="text-[11px] text-gray-500 sm:text-xs">({product.review_count})</span>
         </div>
         <div className="mt-auto flex items-baseline gap-2 pt-1">
-          <span className="font-heading text-base font-bold text-brand-text sm:text-lg">{formatPrice(product.price)}</span>
+            <span className="font-heading text-base font-bold text-brand-text sm:text-lg">{formatPrice(product.variants?.length ? Math.min(...product.variants.map((v) => v.price)) : product.price)}{product.variants?.length ? "+" : ""}</span>
           {product.compare_at_price && product.compare_at_price > product.price && (
             <span className="text-xs text-gray-400 line-through sm:text-sm">{formatPrice(product.compare_at_price)}</span>
           )}

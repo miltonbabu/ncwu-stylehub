@@ -11,6 +11,7 @@ import com.ncwu.stylehub.config.Env;
 import com.ncwu.stylehub.domain.Banner;
 import com.ncwu.stylehub.domain.Category;
 import com.ncwu.stylehub.domain.Product;
+import com.ncwu.stylehub.domain.ProductVariant;
 import com.ncwu.stylehub.domain.Promotion;
 import com.ncwu.stylehub.domain.Review;
 import com.ncwu.stylehub.domain.User;
@@ -115,10 +116,12 @@ public class SeedRunner implements CommandLineRunner {
             p.category = categories.get((String) products[i][1]);
             p.price = (double) products[i][2];
             p.compareAtPrice = (Double) products[i][3];
+            p.costPrice = p.price * 0.4;
             p.stock = (int) products[i][4];
             p.isFeatured = (boolean) products[i][5];
             p.imageUrl = String.format(IMG, P.get((String) products[i][6]));
             p.description = (String) products[i][7];
+            seedOptions(p, i);
             em.persist(p);
             created[i] = p;
         }
@@ -178,6 +181,43 @@ public class SeedRunner implements CommandLineRunner {
             r.comment = (String) row[2];
             r.status = (String) row[3];
             em.persist(r);
+        }
+    }
+
+    private void seedOptions(Product product, int productIndex) {
+        String[] sizes = switch (product.category.slug) {
+            case "t-shirts", "dresses", "jackets-coats" -> new String[] {"S", "M", "L", "XL"};
+            case "jeans-pants" -> new String[] {"28", "30", "32", "34"};
+            case "shoes" -> new String[] {"38", "39", "40", "41", "42"};
+            default -> new String[0];
+        };
+        if (sizes.length == 0) {
+            return;
+        }
+        product.sizes = String.join(",", sizes);
+        String[] styles = switch (product.category.slug) {
+            case "t-shirts" -> productIndex == 0 ? new String[] {"White", "Black"}
+                    : new String[] {"Black", "White"};
+            case "dresses" -> new String[] {"Floral", "Black"};
+            case "jackets-coats" -> new String[] {"Black", "Navy"};
+            case "jeans-pants" -> new String[] {"Blue", "Black"};
+            case "shoes" -> new String[] {"White", "Black"};
+            default -> new String[] {"Regular"};
+        };
+        int optionCount = styles.length * sizes.length;
+        int base = product.stock / optionCount;
+        int remainder = product.stock % optionCount;
+        for (int i = 0; i < optionCount; i++) {
+            ProductVariant variant = new ProductVariant();
+            variant.product = product;
+            variant.style = styles[i / sizes.length];
+            variant.size = sizes[i % sizes.length];
+            variant.price = product.price;
+            variant.compareAtPrice = product.compareAtPrice;
+            variant.costPrice = product.costPrice;
+            variant.stock = base + (i < remainder ? 1 : 0);
+            variant.imageUrl = product.imageUrl;
+            product.variants.add(variant);
         }
     }
 

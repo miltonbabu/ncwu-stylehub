@@ -32,4 +32,11 @@ public class CartItem {
     /** Empty = no size (same product with different sizes are separate cart lines). */
     @Column(length = 50)
     public String size = "";
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "variant_id")
+    public ProductVariant variant;
+
+    @Column(nullable = false, length = 100)
+    public String style = "";
 }

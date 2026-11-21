@@ -3,8 +3,8 @@
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
 import { api, API_URL, getToken } from "@/lib/api";
-import type { Category, Product } from "@/lib/types";
-import { ImagePlus, Upload, X } from "lucide-react";
+import type { Category, Product, ProductVariant } from "@/lib/types";
+import { ImagePlus, Plus, Upload, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -21,6 +21,7 @@ export function ProductForm({ product }: { product?: Product }) {
   const [costPrice, setCostPrice] = useState(product?.cost_price ? String(product.cost_price) : "0");
   const [stock, setStock] = useState(product ? String(product.stock) : "10");
   const [sizes, setSizes] = useState(product?.sizes ?? "");
+  const [variants, setVariants] = useState<ProductVariant[]>(product?.variants ?? []);
   const [description, setDescription] = useState(product?.description ?? "");
   const [featured, setFeatured] = useState(product?.is_featured ?? false);
   const [active, setActive] = useState(product?.is_active ?? true);
@@ -41,6 +42,10 @@ export function ProductForm({ product }: { product?: Product }) {
 
   const setSlot = (index: number, value: string | File | null) => {
     setSlots((prev) => prev.map((s, i) => (i === index ? value : s)));
+  };
+
+  const updateVariant = (index: number, field: keyof ProductVariant, value: string | number | null) => {
+    setVariants((current) => current.map((variant, i) => i === index ? { ...variant, [field]: value } : variant));
   };
 
   const onPickFile = (index: number, file: File | null) => {
@@ -109,6 +114,16 @@ export function ProductForm({ product }: { product?: Product }) {
           .map((s) => s.trim())
           .filter(Boolean)
           .join(","),
+        variants: variants.length ? variants.map((variant) => ({
+          id: variant.id || null,
+          style: variant.style,
+          size: variant.size,
+          price: Number(variant.price),
+          compare_at_price: variant.compare_at_price ? Number(variant.compare_at_price) : null,
+          cost_price: Number(variant.cost_price ?? 0),
+          stock: Number(variant.stock),
+          image_url: variant.image_url ?? "",
+        })) : [],
         image_url: urlSlots[0] ?? "",
         images: urlSlots,
         description,
@@ -198,6 +213,48 @@ export function ProductForm({ product }: { product?: Product }) {
             e.g. S,M,L,XL or 38,39,40 — comma-separated. Leave empty if this product has no sizes.
           </p>
         </Field>
+        <section className="space-y-3 border-t border-gray-100 pt-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 className="text-sm font-semibold text-brand-text">Style and size options</h2>
+              <p className="mt-1 text-xs text-gray-500">Each row has its own price and stock. Leave empty for a single-option product.</p>
+            </div>
+            <Button type="button" size="sm" variant="outline" onClick={() => setVariants((rows) => [...rows, {
+              id: 0, style: "", size: "", price: Number(price || 0), compare_at_price: null,
+              cost_price: Number(costPrice || 0), stock: 0, image_url: "",
+            }])}>
+              <Plus className="h-4 w-4" aria-hidden /> Add option
+            </Button>
+          </div>
+          {variants.map((variant, index) => (
+            <div key={variant.id || `new-${index}`} className="grid grid-cols-2 gap-2 rounded-lg border border-gray-200 p-3 sm:grid-cols-4">
+              <Field label="Style" htmlFor={`pf-v-style-${index}`}>
+                <Input id={`pf-v-style-${index}`} value={variant.style} onChange={(e) => updateVariant(index, "style", e.target.value)} placeholder="Black" />
+              </Field>
+              <Field label="Size" htmlFor={`pf-v-size-${index}`}>
+                <Input id={`pf-v-size-${index}`} value={variant.size} onChange={(e) => updateVariant(index, "size", e.target.value)} placeholder="M" />
+              </Field>
+              <Field label="Price (¥)" htmlFor={`pf-v-price-${index}`}>
+                <Input id={`pf-v-price-${index}`} type="number" min="0.01" step="0.01" value={variant.price} onChange={(e) => updateVariant(index, "price", Number(e.target.value))} />
+              </Field>
+              <Field label="Stock" htmlFor={`pf-v-stock-${index}`}>
+                <Input id={`pf-v-stock-${index}`} type="number" min="0" value={variant.stock} onChange={(e) => updateVariant(index, "stock", Number(e.target.value))} />
+              </Field>
+              <Field label="Cost (¥)" htmlFor={`pf-v-cost-${index}`}>
+                <Input id={`pf-v-cost-${index}`} type="number" min="0" step="0.01" value={variant.cost_price ?? 0} onChange={(e) => updateVariant(index, "cost_price", Number(e.target.value))} />
+              </Field>
+              <Field label="Compare-at (¥)" htmlFor={`pf-v-compare-${index}`}>
+                <Input id={`pf-v-compare-${index}`} type="number" min="0" step="0.01" value={variant.compare_at_price ?? ""} onChange={(e) => updateVariant(index, "compare_at_price", e.target.value ? Number(e.target.value) : null)} />
+              </Field>
+              <div className="col-span-2 flex items-end justify-end sm:col-span-2">
+                <button type="button" onClick={() => setVariants((rows) => rows.filter((_, i) => i !== index))}
+                  className="inline-flex min-h-10 items-center gap-1 rounded-md px-2 text-sm text-red-600 hover:bg-red-50">
+                  <X className="h-4 w-4" aria-hidden /> Remove option
+                </button>
+              </div>
+            </div>
+          ))}
+        </section>
         <Field label="Description" htmlFor="pf-desc">
           <Textarea id="pf-desc" rows={5} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe the fabric, fit and style..." />
         </Field>

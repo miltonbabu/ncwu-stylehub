@@ -165,7 +165,7 @@ export default function AdminDashboard() {
           <div>
             <h2 className="font-heading text-lg font-bold text-brand-text">Sales &amp; Profit</h2>
             <p className="mt-0.5 text-xs text-gray-400">
-              Daily revenue and profit calculated from the cost recorded on each order line.
+              Revenue includes confirmed orders and shipping; gross margin uses each order line's saved cost, less approved refunds.
             </p>
             <div className="mt-3 flex flex-wrap items-center gap-4 text-xs font-medium">
               <span className="flex items-center gap-1.5 text-gray-600">
@@ -203,7 +203,7 @@ export default function AdminDashboard() {
               <TrendingUp className="h-8 w-8 text-gray-300" />
               <p className="mt-2 text-sm font-semibold text-brand-text">No orders in the last {range} days</p>
               <p className="mt-1 text-xs text-gray-500">
-                Revenue and profit appear here automatically as soon as customers order.
+                Revenue and gross margin appear when orders are confirmed; pending and cancelled orders are excluded.
               </p>
               <Link
                 href="/shop"

@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.ncwu.stylehub.domain.CartItem;
 import com.ncwu.stylehub.domain.Product;
+import com.ncwu.stylehub.domain.ProductVariant;
 import com.ncwu.stylehub.domain.Review;
 import com.ncwu.stylehub.domain.User;
 import com.ncwu.stylehub.exception.ApiException;
@@ -131,17 +132,44 @@ public class StoreService {
             throw new ApiException(404, "Product not found");
         }
         String size = normalizeSize(req.size());
-        // Same product + same size merges quantity; different sizes stay separate lines.
-        CartItem item = em.createQuery(
+        String style = normalizeSize(req.style());
+        ProductVariant variant = null;
+        if (req.variantId() != null) {
+            variant = em.find(ProductVariant.class, req.variantId());
+            if (variant == null || !variant.product.id.equals(product.id)) {
+                throw new ApiException(400, "Selected product option is unavailable");
+            }
+            size = normalizeSize(variant.size);
+            style = normalizeSize(variant.style);
+        } else if (!product.variants.isEmpty()) {
+            throw new ApiException(400, "Choose a style and size before adding this product");
+        }
+        final Long variantId = variant == null ? null : variant.id;
+        // Keep different styles and sizes as distinct lines, even for one product.
+        var cartQuery = em.createQuery(
                         "SELECT c FROM CartItem c WHERE c.user.id = :uid AND c.product.id = :pid " +
-                                "AND COALESCE(c.size, '') = :size", CartItem.class)
-                .setParameter("uid", userId).setParameter("pid", req.productId()).setParameter("size", size)
-                .getResultStream().findFirst().orElse(null);
+                                "AND c.variant.id = :vid", CartItem.class)
+                .setParameter("uid", userId).setParameter("pid", req.productId());
+        CartItem item;
+        if (variantId == null) {
+            item = em.createQuery("SELECT c FROM CartItem c WHERE c.user.id = :uid AND c.product.id = :pid " +
+                            "AND c.variant IS NULL AND COALESCE(c.size, '') = :size", CartItem.class)
+                    .setParameter("uid", userId).setParameter("pid", req.productId()).setParameter("size", size)
+                    .getResultStream().findFirst().orElse(null);
+        } else {
+            item = cartQuery.setParameter("vid", variantId).getResultStream().findFirst().orElse(null);
+        }
+        int available = variant == null ? product.stock : variant.stock;
+        if ((item == null ? 0 : item.quantity) + req.quantity() > available) {
+            throw new ApiException(400, "Only " + available + " available for this option");
+        }
         if (item == null) {
             item = new CartItem();
             item.user = em.find(User.class, userId);
             item.product = product;
             item.size = size;
+            item.style = style;
+            item.variant = variant;
             item.quantity = req.quantity();
             em.persist(item);
         } else {
@@ -153,6 +181,10 @@ public class StoreService {
     @Transactional
     public CartItemOut updateCartItem(long userId, long itemId, int quantity) {
         CartItem item = ownedCartItem(userId, itemId);
+        int available = item.variant == null ? item.product.stock : item.variant.stock;
+        if (quantity > available) {
+            throw new ApiException(400, "Only " + available + " available for this option");
+        }
         item.quantity = quantity;
         return toCartOut(item);
     }
@@ -222,8 +254,13 @@ public class StoreService {
         long products = em.createQuery("SELECT COUNT(p) FROM Product p", Long.class).getSingleResult();
         long users = em.createQuery("SELECT COUNT(u) FROM User u", Long.class).getSingleResult();
         long orders = em.createQuery("SELECT COUNT(o) FROM PurchaseOrder o", Long.class).getSingleResult();
-        double revenue = em.createQuery("SELECT COALESCE(SUM(o.total), 0.0) FROM PurchaseOrder o", Double.class)
+        double revenue = em.createQuery("SELECT COALESCE(SUM(o.total), 0.0) FROM PurchaseOrder o " +
+                        "WHERE o.status IN ('paid', 'shipped', 'completed')", Double.class)
                 .getSingleResult();
+        double refunds = em.createQuery("SELECT COALESCE(SUM(r.quantity * r.orderItem.unitPrice), 0.0) " +
+                        "FROM RefundRequest r WHERE r.status = 'approved' AND r.order.status IN ('paid', 'shipped', 'completed')",
+                        Double.class).getSingleResult();
+        revenue = Math.max(0, revenue - refunds);
         long pending = em.createQuery("SELECT COUNT(r) FROM Review r WHERE r.status = 'pending'", Long.class)
                 .getSingleResult();
         long lowStock = em.createQuery("SELECT COUNT(p) FROM Product p WHERE p.stock < 5", Long.class)
@@ -246,8 +283,12 @@ public class StoreService {
     }
 
     private static CartItemOut toCartOut(CartItem c) {
-        return new CartItemOut(c.id, c.product.id, c.quantity, normalizeSize(c.size), c.product.name,
-                c.product.price, c.product.imageUrl, c.product.stock);
+        return new CartItemOut(c.id, c.product.id, c.variant == null ? null : c.variant.id,
+                c.quantity, normalizeSize(c.style), normalizeSize(c.size), c.product.name,
+                c.variant == null ? c.product.price : c.variant.price,
+                c.variant != null && c.variant.imageUrl != null && !c.variant.imageUrl.isBlank()
+                        ? c.variant.imageUrl : c.product.imageUrl,
+                c.variant == null ? c.product.stock : c.variant.stock);
     }
 
     /** Empty/NULL both mean "no size". */

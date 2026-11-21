@@ -30,7 +30,16 @@ public final class StoreDtos {
             boolean isFeatured, boolean isActive, LocalDateTime createdAt,
             List<ProductImageOut> images, double avgRating, int reviewCount,
             /** Only populated for admin responses — hidden from the public catalog. */
-            Double costPrice) {
+            Double costPrice, List<ProductVariantOut> variants) {
+    }
+
+    public record ProductVariantOut(long id, String style, String size, double price, Double compareAtPrice,
+                                    int stock, String imageUrl, Double costPrice) {
+    }
+
+    public record ProductVariantIn(Long id, String style, String size, @Positive double price,
+                                   Double compareAtPrice, @Min(0) double costPrice,
+                                   @Min(0) int stock, String imageUrl) {
     }
 
     public record ProductCreateRequest(
@@ -46,13 +55,14 @@ public final class StoreDtos {
             String imageUrl,
             boolean isFeatured,
             boolean isActive,
-            List<String> images) {
+            List<String> images,
+            List<ProductVariantIn> variants) {
     }
 
     public record ProductUpdateRequest(
             String name, String slug, String description, Double price, Double compareAtPrice,
             Double costPrice, Integer stock, String sizes, Long categoryId, String imageUrl,
-            Boolean isFeatured, Boolean isActive, List<String> images) {
+            Boolean isFeatured, Boolean isActive, List<String> images, List<ProductVariantIn> variants) {
     }
 
     /* ---------- Banners / Promotions ---------- */
@@ -79,19 +89,21 @@ public final class StoreDtos {
 
     /* ---------- Cart ---------- */
 
-    public record CartItemCreate(@NotNull Long productId, @Min(1) int quantity, String size) {
+    public record CartItemCreate(@NotNull Long productId, Long variantId, @Min(1) int quantity,
+                                 String style, String size) {
     }
 
     public record CartItemUpdate(@Min(1) int quantity) {
     }
 
-    public record CartItemOut(long id, long productId, int quantity, String size, String productName,
-                              double productPrice, String productImage, int stock) {
+    public record CartItemOut(long id, long productId, Long variantId, int quantity, String style, String size,
+                              String productName, double productPrice, String productImage, int stock) {
     }
 
     /* ---------- Orders ---------- */
 
-    public record OrderItemIn(@NotNull Long productId, @Min(1) int quantity, String size) {
+    public record OrderItemIn(@NotNull Long productId, Long variantId, @Min(1) int quantity,
+                              String style, String size) {
     }
 
     public record OrderCreateRequest(
@@ -103,7 +115,7 @@ public final class StoreDtos {
     }
 
     public record OrderItemOut(Long id, Long productId, String productName, double unitPrice,
-                               int quantity, String size, String productImage) {
+                               int quantity, String style, String size, String productImage) {
     }
 
     public record OrderOut(long id, long userId, String status, String trackingNumber, double total,
@@ -111,6 +123,19 @@ public final class StoreDtos {
                            LocalDateTime createdAt, List<OrderItemOut> items, double shipping,
                            /** Last status / tracking change, so customers can see the latest update time. */
                            LocalDateTime updatedAt) {
+    }
+
+    public record RefundRequestCreate(@NotNull Long orderItemId, @Min(1) int quantity,
+                                      @NotBlank @jakarta.validation.constraints.Size(max = 1000) String reason) {
+    }
+
+    public record RefundDecision(@NotBlank String status,
+                                 @jakarta.validation.constraints.Size(max = 1000) String adminNote) {
+    }
+
+    public record RefundRequestOut(long id, long orderId, long orderItemId, String productName,
+                                   int quantity, double amount, String reason, String status,
+                                   String adminNote, LocalDateTime requestedAt, LocalDateTime resolvedAt) {
     }
 
     /* ---------- NCWU StyleHub Club (newsletter) ---------- */

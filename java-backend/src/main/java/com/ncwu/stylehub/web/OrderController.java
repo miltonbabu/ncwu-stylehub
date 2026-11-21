@@ -15,6 +15,8 @@ import com.ncwu.stylehub.security.AuthInterceptor;
 import com.ncwu.stylehub.service.OrderService;
 import com.ncwu.stylehub.web.dto.StoreDtos.OrderCreateRequest;
 import com.ncwu.stylehub.web.dto.StoreDtos.OrderOut;
+import com.ncwu.stylehub.web.dto.StoreDtos.RefundRequestCreate;
+import com.ncwu.stylehub.web.dto.StoreDtos.RefundRequestOut;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -49,5 +51,17 @@ public class OrderController {
     @PostMapping("/{orderId}/cancel")
     public OrderOut cancel(@PathVariable long orderId, HttpServletRequest request) {
         return orderService.cancel(AuthInterceptor.userId(request), orderId);
+    }
+
+    @GetMapping("/refunds")
+    public List<RefundRequestOut> myRefunds(HttpServletRequest request) {
+        return orderService.myRefunds(AuthInterceptor.userId(request));
+    }
+
+    @PostMapping("/refunds")
+    @ResponseStatus(HttpStatus.CREATED)
+    public RefundRequestOut requestRefund(@Valid @RequestBody RefundRequestCreate req,
+                                         HttpServletRequest request) {
+        return orderService.requestRefund(AuthInterceptor.userId(request), req);
     }
 }

@@ -19,6 +19,7 @@ const bricolage = Bricolage_Grotesque({
 const interTight = Inter_Tight({ subsets: ["latin"], variable: "--font-inter-tight", display: "swap" });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://shop.ncwu.site"),
   title: "NCWU StyleHub — Everyday Style, Considered",
   icons: {
     icon: [{ url: "/stylehub-mark.svg", type: "image/svg+xml" }],
@@ -26,6 +27,14 @@ export const metadata: Metadata = {
   },
   description:
     "Shop the latest fashion: t-shirts, dresses, jackets, jeans, shoes and accessories. Fast shipping, easy returns and secure checkout.",
+  openGraph: {
+    type: "website",
+    siteName: "NCWU StyleHub",
+    title: "NCWU StyleHub — Everyday Style, Considered",
+    description: "Shop considered everyday style from NCWU StyleHub.",
+    images: [{ url: "/stylehub-mark.svg", alt: "NCWU StyleHub" }],
+  },
+  twitter: { card: "summary", title: "NCWU StyleHub", images: ["/stylehub-mark.svg"] },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

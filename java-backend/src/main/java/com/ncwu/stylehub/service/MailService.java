@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.ncwu.stylehub.domain.Order;
 import com.ncwu.stylehub.domain.OrderItem;
+import com.ncwu.stylehub.domain.RefundRequest;
 import com.ncwu.stylehub.domain.User;
 
 /**
@@ -40,7 +41,7 @@ public class MailService {
     private final String from = env("MAIL_FROM", "NCWU StyleHub <info@shop.ncwu.site>");
     private final String siteUrl = env("SITE_URL", "https://shop.ncwu.site").replaceAll("/+$", "");
     /** Store owner inbox that receives every contact-form submission. */
-    private final String adminInbox = env("ADMIN_EMAIL", "miltonbabu9666@gmail.com");
+    private final String adminInbox = env("ADMIN_EMAIL", "md.milton@qq.com");
 
     public boolean isEnabled() {
         return !apiKey.isBlank();
@@ -112,6 +113,30 @@ public class MailService {
                         + "<p>Changed your mind? You can always order again from the shop.</p>"
                         + button("Back to the shop", siteUrl + "/shop"));
         send(user.email, "Order #" + order.id + " cancelled — NCWU StyleHub", html);
+    }
+
+    public void sendRefundRequested(RefundRequest refund) {
+        String html = layout("Refund request received",
+                "<p>A refund request was submitted for order <strong>#" + refund.order.id + "</strong>.</p>"
+                        + "<p>Item: " + escape(refund.orderItem.productName) + " × " + refund.quantity + "</p>"
+                        + "<p>Reason: " + escape(refund.reason) + "</p>");
+        send(adminInbox, "Refund request for order #" + refund.order.id, html);
+    }
+
+    public void sendRefundDecision(RefundRequest refund) {
+        boolean approved = "approved".equals(refund.status);
+        String html = layout(approved ? "Refund approved" : "Refund request update",
+                "<p>Hi " + escape(refund.user.name) + ",</p>"
+                        + "<p>Your refund request for <strong>" + escape(refund.orderItem.productName)
+                        + "</strong> (order #" + refund.order.id + ") was <strong>"
+                        + escape(refund.status) + "</strong>.</p>"
+                        + (approved ? "<p>Approved refund amount: <strong>¥"
+                                + String.format("%.2f", refund.orderItem.unitPrice * refund.quantity)
+                                + "</strong>. Our team will arrange the refund; processing time depends on your payment provider.</p>" : "")
+                        + (refund.adminNote == null || refund.adminNote.isBlank()
+                                ? "" : "<p>Note: " + escape(refund.adminNote) + "</p>")
+                        + button("View your orders", siteUrl + "/orders"));
+        send(refund.user.email, "Refund " + refund.status + " for order #" + refund.order.id, html);
     }
 
     /** Welcome note for a new NCWU StyleHub Club member. */
@@ -197,6 +222,7 @@ public class MailService {
         for (OrderItem item : order.items) {
             rows.append("<tr><td style=\"padding:8px 0;border-bottom:1px solid #eee;\">")
                     .append(escape(item.productName))
+                    .append(item.style != null && !item.style.isBlank() ? " <span class=\"muted\">(" + escape(item.style) + ")</span>" : "")
                     .append(item.size != null && !item.size.isBlank() ? " <span class=\"muted\">(Size " + escape(item.size) + ")</span>" : "")
                     .append(" &times; ").append(item.quantity)
                     .append("</td><td align=\"right\" style=\"padding:8px 0;border-bottom:1px solid #eee;\">¥")

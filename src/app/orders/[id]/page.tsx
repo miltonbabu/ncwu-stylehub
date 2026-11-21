@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { api, cancelOrder } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import type { Order } from "@/lib/types";
+import type { RefundRequest } from "@/lib/types";
 import { cn, formatDate, formatPrice, imgFallback, paymentLabel, cloudinaryImg } from "@/lib/utils";
 import { ArrowLeft, Check, MapPin, Package, Phone, RefreshCw, User as UserIcon, XCircle } from "lucide-react";
 import Link from "next/link";
@@ -47,11 +48,17 @@ export default function OrderDetailPage() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
+  const [refunds, setRefunds] = useState<RefundRequest[]>([]);
+  const [refundItem, setRefundItem] = useState<number | null>(null);
+  const [refundQty, setRefundQty] = useState(1);
+  const [refundReason, setRefundReason] = useState("");
 
   const load = useCallback(async () => {
     if (!id) return;
     const data = await api<Order>(`/orders/${id}`);
     setOrder(data);
+    const requests = await api<RefundRequest[]>("/orders/refunds").catch(() => []);
+    setRefunds(requests.filter((refund) => refund.order_id === data.id));
   }, [id]);
 
   useEffect(() => {
@@ -92,6 +99,24 @@ export default function OrderDetailPage() {
       setNotice("Your order was cancelled. A confirmation email is on its way.");
     } catch (err) {
       setNotice(err instanceof Error ? err.message : "Could not cancel the order.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const submitRefund = async (itemId: number) => {
+    setBusy(true);
+    setNotice("");
+    try {
+      await api<RefundRequest>("/orders/refunds", { method: "POST", body: JSON.stringify({
+        order_item_id: itemId, quantity: refundQty, reason: refundReason,
+      }) });
+      setRefundItem(null);
+      setRefundReason("");
+      await load();
+      setNotice("Refund request submitted. We will email you when it is reviewed.");
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : "Could not submit the refund request.");
     } finally {
       setBusy(false);
     }
@@ -237,7 +262,7 @@ export default function OrderDetailPage() {
           </h2>
           <ul className="divide-y divide-gray-500/10">
             {order.items.map((item) => (
-              <li key={item.id} className="flex items-center gap-4 px-6 py-4">
+              <li key={item.id} className="flex flex-wrap items-center gap-3 px-4 py-4 sm:flex-nowrap sm:gap-4 sm:px-6">
                 <div className="h-16 w-14 shrink-0 overflow-hidden rounded-xl bg-gray-50">
                   <img
                     src={cloudinaryImg(item.product_image, { width: 160, height: 192 }) || imgFallback(`item-${item.id}`)}
@@ -258,12 +283,31 @@ export default function OrderDetailPage() {
                   )}
                   <p className="mt-0.5 text-xs text-gray-500">
                     {formatPrice(item.unit_price)} × {item.quantity}
+                    {item.style ? <span className="ml-2 rounded-full bg-gray-100 px-2 py-0.5 font-medium text-gray-600">{item.style}</span> : null}
                     {item.size ? <span className="ml-2 rounded-full bg-gray-100 px-2 py-0.5 font-medium text-gray-600">Size: {item.size}</span> : null}
                   </p>
                 </div>
                 <p className="font-heading font-bold text-brand-text">
                   {formatPrice(item.unit_price * item.quantity)}
                 </p>
+                {order.status !== "cancelled" && <button type="button" onClick={() => {
+                  setRefundItem(refundItem === item.id ? null : item.id);
+                  setRefundQty(1);
+                }} className="min-h-10 text-sm font-medium text-primary hover:underline">Request refund</button>}
+                {refundItem === item.id && <div className="grid w-full gap-3 rounded-lg bg-gray-50 p-3 sm:grid-cols-[100px_1fr_auto]">
+                  <label className="text-xs font-medium text-gray-600">Quantity
+                    <input type="number" min="1" max={item.quantity} value={refundQty} onChange={(e) => setRefundQty(Math.max(1, Math.min(item.quantity, Number(e.target.value))))}
+                      className="mt-1 h-10 w-full rounded-md border border-gray-200 bg-white px-2 text-sm" />
+                  </label>
+                  <label className="text-xs font-medium text-gray-600">Reason
+                    <input value={refundReason} maxLength={1000} onChange={(e) => setRefundReason(e.target.value)} placeholder="Why are you requesting a refund?" required
+                      className="mt-1 h-10 w-full rounded-md border border-gray-200 bg-white px-3 text-sm" />
+                  </label>
+                  <Button type="button" disabled={busy || !refundReason.trim()} onClick={() => submitRefund(item.id)} className="self-end">Submit</Button>
+                </div>}
+                {refunds.filter((refund) => refund.order_item_id === item.id).map((refund) => (
+                  <p key={refund.id} className="w-full text-xs text-gray-500">Refund request: {refund.status} · {refund.quantity} item(s)</p>
+                ))}
               </li>
             ))}
           </ul>

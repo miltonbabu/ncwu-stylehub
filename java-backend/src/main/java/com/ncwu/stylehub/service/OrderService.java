@@ -9,14 +9,20 @@ import org.springframework.transaction.annotation.Transactional;
 import com.ncwu.stylehub.domain.Order;
 import com.ncwu.stylehub.domain.OrderItem;
 import com.ncwu.stylehub.domain.Product;
+import com.ncwu.stylehub.domain.ProductVariant;
+import com.ncwu.stylehub.domain.RefundRequest;
 import com.ncwu.stylehub.domain.User;
 import com.ncwu.stylehub.exception.ApiException;
 import com.ncwu.stylehub.web.dto.StoreDtos.OrderCreateRequest;
 import com.ncwu.stylehub.web.dto.StoreDtos.OrderItemIn;
 import com.ncwu.stylehub.web.dto.StoreDtos.OrderItemOut;
 import com.ncwu.stylehub.web.dto.StoreDtos.OrderOut;
+import com.ncwu.stylehub.web.dto.StoreDtos.RefundDecision;
+import com.ncwu.stylehub.web.dto.StoreDtos.RefundRequestCreate;
+import com.ncwu.stylehub.web.dto.StoreDtos.RefundRequestOut;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import jakarta.persistence.PersistenceContext;
 
 /** Checkout and order history — stock decrement + totals with the store's shipping rules. */
@@ -48,26 +54,46 @@ public class OrderService {
         order.trackingNumber = TrackingCodes.now();
 
         double subtotal = 0;
-        for (OrderItemIn line : req.items()) {
-            Product product = em.find(Product.class, line.productId());
+        for (OrderItemIn line : req.items().stream()
+                .sorted(java.util.Comparator.comparing(OrderItemIn::productId)
+                        .thenComparing(i -> i.variantId() == null ? 0L : i.variantId()))
+                .toList()) {
+            Product product = em.find(Product.class, line.productId(), LockModeType.PESSIMISTIC_WRITE);
             if (product == null || !product.isActive) {
                 throw new ApiException(400, "Product " + line.productId() + " is unavailable");
             }
-            if (product.stock < line.quantity()) {
-                throw new ApiException(400, "Insufficient stock for '" + product.name
-                        + "' (available: " + product.stock + ")");
+            ProductVariant variant = null;
+            if (line.variantId() != null) {
+                variant = em.find(ProductVariant.class, line.variantId(), LockModeType.PESSIMISTIC_WRITE);
+                if (variant == null || !variant.product.id.equals(product.id)) {
+                    throw new ApiException(400, "Selected option for '" + product.name + "' is unavailable");
+                }
+            } else if (!product.variants.isEmpty()) {
+                throw new ApiException(400, "Choose a style and size for '" + product.name + "'");
             }
-            product.stock -= line.quantity();
+            int stock = variant == null ? product.stock : variant.stock;
+            if (stock < line.quantity()) {
+                throw new ApiException(400, "Insufficient stock for '" + product.name
+                        + "' (available: " + stock + ")");
+            }
+            if (variant != null) {
+                variant.stock -= line.quantity();
+                product.stock = Math.max(0, product.stock - line.quantity());
+            } else {
+                product.stock -= line.quantity();
+            }
             OrderItem item = new OrderItem();
             item.order = order;
             item.product = product;
+            item.variant = variant;
             item.productName = product.name;
-            item.unitPrice = product.price;
-            item.unitCost = product.costPrice;
+            item.unitPrice = variant == null ? product.price : variant.price;
+            item.unitCost = variant == null ? product.costPrice : variant.costPrice;
             item.quantity = line.quantity();
-            item.size = StoreService.normalizeSize(line.size());
+            item.size = StoreService.normalizeSize(variant == null ? line.size() : variant.size);
+            item.style = StoreService.normalizeSize(variant == null ? line.style() : variant.style);
             order.items.add(item);
-            subtotal += product.price * line.quantity();
+            subtotal += item.unitPrice * line.quantity();
         }
         double shipping = subtotal > 0 && subtotal < FREE_SHIPPING_THRESHOLD ? SHIPPING_FEE : 0;
         order.total = Math.round((subtotal + shipping) * 100) / 100.0;
@@ -121,6 +147,9 @@ public class OrderService {
             if (!List.of("pending", "paid", "shipped", "completed", "cancelled").contains(status)) {
                 throw new ApiException(400, "Invalid order status");
             }
+            if ("cancelled".equals(previousStatus) && !"cancelled".equals(status)) {
+                throw new ApiException(400, "A cancelled order cannot be reopened");
+            }
             order.status = status;
         }
         if (trackingNumber != null) {
@@ -133,6 +162,9 @@ public class OrderService {
             order.updatedAt = java.time.LocalDateTime.now(ZoneOffset.UTC);
         }
         if (statusChanged) {
+            if ("cancelled".equals(status) && !"cancelled".equals(previousStatus)) {
+                restoreStock(order);
+            }
             mailService.sendTrackingUpdate(order.user, order);
         }
         return toOut(order);
@@ -154,21 +186,95 @@ public class OrderService {
         if (!List.of("pending", "paid").contains(order.status)) {
             throw new ApiException(400, "This order can no longer be cancelled — please contact support.");
         }
-        for (OrderItem item : order.items) {
-            if (item.product != null) {
-                item.product.stock += item.quantity;
-            }
-        }
+        restoreStock(order);
         order.status = "cancelled";
         order.updatedAt = java.time.LocalDateTime.now(ZoneOffset.UTC);
         mailService.sendOrderCancelled(order.user, order);
         return toOut(order);
     }
 
+    @Transactional(readOnly = true)
+    public List<RefundRequestOut> myRefunds(long userId) {
+        return em.createQuery("SELECT r FROM RefundRequest r WHERE r.user.id = :uid ORDER BY r.requestedAt DESC",
+                        RefundRequest.class)
+                .setParameter("uid", userId).getResultList().stream().map(OrderService::toRefundOut).toList();
+    }
+
+    @Transactional
+    public RefundRequestOut requestRefund(long userId, RefundRequestCreate req) {
+        OrderItem item = em.find(OrderItem.class, req.orderItemId(), LockModeType.PESSIMISTIC_WRITE);
+        if (item == null || item.order.user.id != userId) {
+            throw new ApiException(404, "Order item not found");
+        }
+        if (!List.of("shipped", "completed").contains(item.order.status)) {
+            throw new ApiException(400, "Refunds can be requested after an order has shipped");
+        }
+        Long alreadyRequested = em.createQuery(
+                        "SELECT COALESCE(SUM(r.quantity), 0) FROM RefundRequest r " +
+                                "WHERE r.orderItem.id = :itemId AND r.status IN ('pending', 'approved')", Long.class)
+                .setParameter("itemId", item.id).getSingleResult();
+        if (alreadyRequested + req.quantity() > item.quantity) {
+            throw new ApiException(400, "Refund quantity exceeds the unrefunded items");
+        }
+        RefundRequest refund = new RefundRequest();
+        refund.order = item.order;
+        refund.orderItem = item;
+        refund.user = item.order.user;
+        refund.quantity = req.quantity();
+        refund.reason = req.reason().trim();
+        em.persist(refund);
+        mailService.sendRefundRequested(refund);
+        return toRefundOut(refund);
+    }
+
+    @Transactional(readOnly = true)
+    public List<RefundRequestOut> adminRefunds() {
+        return em.createQuery("SELECT r FROM RefundRequest r ORDER BY r.requestedAt DESC", RefundRequest.class)
+                .getResultList().stream().map(OrderService::toRefundOut).toList();
+    }
+
+    @Transactional
+    public RefundRequestOut decideRefund(long refundId, RefundDecision decision) {
+        RefundRequest refund = em.find(RefundRequest.class, refundId, LockModeType.PESSIMISTIC_WRITE);
+        if (refund == null) {
+            throw new ApiException(404, "Refund request not found");
+        }
+        if (!"pending".equals(refund.status)) {
+            throw new ApiException(400, "This refund request has already been resolved");
+        }
+        if (!List.of("approved", "rejected").contains(decision.status())) {
+            throw new ApiException(400, "Refund decision must be approved or rejected");
+        }
+        refund.status = decision.status();
+        refund.adminNote = decision.adminNote() == null ? "" : decision.adminNote().trim();
+        refund.resolvedAt = java.time.LocalDateTime.now(ZoneOffset.UTC);
+        mailService.sendRefundDecision(refund);
+        return toRefundOut(refund);
+    }
+
+    private static void restoreStock(Order order) {
+        for (OrderItem item : order.items) {
+            if (item.product != null) {
+                if (item.variant != null) {
+                    item.variant.stock += item.quantity;
+                }
+                item.product.stock += item.quantity;
+            }
+        }
+    }
+
+    public static RefundRequestOut toRefundOut(RefundRequest refund) {
+        OrderItem item = refund.orderItem;
+        return new RefundRequestOut(refund.id, refund.order.id, item.id, item.productName,
+                refund.quantity, Math.round(item.unitPrice * refund.quantity * 100.0) / 100.0,
+                refund.reason, refund.status, refund.adminNote, refund.requestedAt, refund.resolvedAt);
+    }
+
     public static OrderOut toOut(Order order) {
         List<OrderItemOut> items = order.items.stream()
                 .map(i -> new OrderItemOut(i.id, i.product != null ? i.product.id : null,
-                        i.productName, i.unitPrice, i.quantity, StoreService.normalizeSize(i.size),
+                        i.productName, i.unitPrice, i.quantity, StoreService.normalizeSize(i.style),
+                        StoreService.normalizeSize(i.size),
                         i.product != null ? i.product.imageUrl : ""))
                 .toList();
         double itemsSum = items.stream().mapToDouble(i -> i.unitPrice() * i.quantity()).sum();

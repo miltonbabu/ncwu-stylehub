@@ -41,8 +41,8 @@ export default function CartPage() {
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_380px]">
         <ul className="space-y-4">
-          {items.map(({ product, quantity, size }) => (
-            <li key={`${product.id}-${size}`} className="flex gap-4 rounded-2xl border border-gray-100 bg-white p-4">
+          {items.map(({ product, quantity, size, style, variant_id, price, stock }) => (
+            <li key={`${product.id}-${variant_id ?? "legacy"}-${size}`} className="flex gap-3 rounded-2xl border border-gray-100 bg-white p-3 sm:gap-4 sm:p-4">
               <Link href={`/product/${product.id}`} className="h-24 w-20 shrink-0 overflow-hidden rounded-xl bg-gray-50">
                 <img
                   src={cloudinaryImg(product.image_url, { width: 200, height: 240 })}
@@ -61,12 +61,13 @@ export default function CartPage() {
                     </Link>
                     <p className="mt-0.5 text-xs text-gray-500">
                       {product.category_name}
-                      {size && <span className="ml-2 rounded-full bg-gray-100 px-2 py-0.5 font-medium text-gray-600">Size: {size}</span>}
+                      {style && <span className="ml-2 rounded-full bg-gray-100 px-2 py-0.5 font-medium text-gray-600">{style}</span>}
+                      {size && <span className="ml-1 rounded-full bg-gray-100 px-2 py-0.5 font-medium text-gray-600">Size: {size}</span>}
                     </p>
                   </div>
                   <button
                     type="button"
-                    onClick={() => remove(product.id, size)}
+                    onClick={() => remove(product.id, size, variant_id)}
                     className="cursor-pointer rounded-full p-2 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600"
                     aria-label={`Remove ${product.name}`}
                   >
@@ -77,7 +78,7 @@ export default function CartPage() {
                   <div className="flex items-center rounded-full border border-gray-200">
                     <button
                       type="button"
-                      onClick={() => updateQuantity(product.id, quantity - 1, size)}
+                      onClick={() => updateQuantity(product.id, quantity - 1, size, variant_id)}
                       className="cursor-pointer px-3 py-1.5 text-gray-500 hover:text-primary"
                       aria-label="Decrease quantity"
                     >
@@ -86,7 +87,7 @@ export default function CartPage() {
                     <span className="w-8 text-center text-sm font-semibold">{quantity}</span>
                     <button
                       type="button"
-                      onClick={() => updateQuantity(product.id, Math.min(product.stock, quantity + 1), size)}
+                      onClick={() => updateQuantity(product.id, Math.min(stock, quantity + 1), size, variant_id)}
                       className="cursor-pointer px-3 py-1.5 text-gray-500 hover:text-primary"
                       aria-label="Increase quantity"
                     >
@@ -94,7 +95,7 @@ export default function CartPage() {
                     </button>
                   </div>
                   <p className="font-heading font-bold text-brand-text">
-                    {formatPrice(product.price * quantity)}
+                    {formatPrice(price * quantity)}
                   </p>
                 </div>
               </div>

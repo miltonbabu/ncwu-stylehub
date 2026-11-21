@@ -36,6 +36,8 @@ import com.ncwu.stylehub.web.dto.StoreDtos.AdminStats;
 import com.ncwu.stylehub.web.dto.StoreDtos.ContactMessageOut;
 import com.ncwu.stylehub.web.dto.StoreDtos.OrderOut;
 import com.ncwu.stylehub.web.dto.StoreDtos.OrderPatchRequest;
+import com.ncwu.stylehub.web.dto.StoreDtos.RefundDecision;
+import com.ncwu.stylehub.web.dto.StoreDtos.RefundRequestOut;
 import com.ncwu.stylehub.web.dto.StoreDtos.ProductCreateRequest;
 import com.ncwu.stylehub.web.dto.StoreDtos.ProductOut;
 import com.ncwu.stylehub.web.dto.StoreDtos.ProductUpdateRequest;
@@ -200,6 +202,16 @@ public class AdminController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteOrder(@PathVariable long id) {
         orderService.deleteOrder(id);
+    }
+
+    @GetMapping("/refunds")
+    public List<RefundRequestOut> refunds() {
+        return orderService.adminRefunds();
+    }
+
+    @PatchMapping("/refunds/{id}")
+    public RefundRequestOut decideRefund(@PathVariable long id, @Valid @RequestBody RefundDecision decision) {
+        return orderService.decideRefund(id, decision);
     }
 
     /* ---------------- NCWU StyleHub Club ---------------- */

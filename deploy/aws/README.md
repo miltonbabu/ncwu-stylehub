@@ -47,10 +47,12 @@ Paste the generated value into `SECRET_KEY`; do not reuse a secret shared in cha
 - `DATABASE_PASSWORD`: your database password. Single-quote values containing `$` or `#` in the Compose `.env` file.
 - `CORS_ORIGINS`: exact Vercel/custom frontend origins, comma separated, without trailing slashes. Do not use `*`.
 - `SITE_URL`: public frontend URL for email links.
+- `ADMIN_EMAIL`: inbox for contact messages and refund-request alerts (for this store: `md.milton@qq.com`).
+- `RESEND_API_KEY` and `MAIL_FROM`: required for order/refund emails. `MAIL_FROM` must use a sender/domain verified in Resend.
 
 Use the actual hostname and username shown in Supabase. Separate credentials avoid URL-encoding issues in passwords. Optional Cloudinary and Resend settings are in the template. Supabase frontend API keys are not needed by this Java backend.
 
-The existing backend uses Hibernate schema auto-update when starting. Back up an existing database before deployment. This package does not run SQL migrations or alter your Supabase project during setup.
+Back up an existing database before deployment. For the product-option and refund features, first run `supabase/migrations/20261121-product-variants-refunds.sql` in Supabase Dashboard > SQL Editor. It adds variant inventory and refund requests, and backfills existing sized products without deleting orders. Do not rerun the seed file on a live database. The backend also uses Hibernate schema auto-update, but that does not perform this existing-product backfill.
 
 Production Compose disables demo seeding and the runner that resets demo passwords on every startup. Existing demo accounts remain in the database: change their passwords or disable them before going live. Ensure you retain a working admin account; a brand-new empty database will not receive demo accounts with this configuration.
 
@@ -115,14 +117,20 @@ Use no trailing slash and do not append `/api/v1`. Redeploy the frontend. Verify
 
 ## Updates and troubleshooting
 
+After the change is pushed to the GitHub repository that EC2 cloned, run these commands on EC2. This rebuilds and recreates the API container; a full EC2 reboot is not needed:
+
 ```bash
+cd ~/stylehub
 git pull --ff-only
+cd deploy/aws
+nano .env
 docker compose build api
 docker compose up -d
 docker compose logs --tail=100 api web
+curl --fail http://localhost/health
 docker stats --no-stream
 ```
 
-A changed `.env` takes effect after `docker compose up -d`. Keep `.env` and SSH keys outside Git. Back up uploads and the Supabase database. The Docker build context excludes local credentials and data.
+A changed `.env` takes effect after `docker compose up -d`; set `ADMIN_EMAIL=md.milton@qq.com` there and verify `RESEND_API_KEY` and `MAIL_FROM` before expecting email. Keep `.env` and SSH keys outside Git. Back up uploads and the Supabase database. The Docker build context excludes local credentials and data.
 
 If API health fails, check Supabase availability, network restrictions, pooler credentials and SSL configuration. If the browser reports CORS errors, match `CORS_ORIGINS` to the exact frontend origin and recreate the API container. Do not publish secret environment values in logs or screenshots.

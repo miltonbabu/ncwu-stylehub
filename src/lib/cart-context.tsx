@@ -1,14 +1,14 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import type { CartLine, Product } from "./types";
+import type { CartLine, Product, ProductVariant } from "./types";
 
 interface CartContextValue {
   items: CartLine[];
   ready: boolean;
-  add: (product: Product, quantity?: number, size?: string) => void;
-  updateQuantity: (productId: number, quantity: number, size?: string) => void;
-  remove: (productId: number, size?: string) => void;
+  add: (product: Product, quantity?: number, size?: string, variant?: ProductVariant) => void;
+  updateQuantity: (productId: number, quantity: number, size?: string, variantId?: number | null) => void;
+  remove: (productId: number, size?: string, variantId?: number | null) => void;
   clear: () => void;
   count: number;
   subtotal: number;
@@ -27,7 +27,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       if (raw) {
         const parsed = JSON.parse(raw) as CartLine[];
         // Older carts have no `size`; normalize so every line is keyed consistently.
-        setItems(parsed.map((l) => ({ ...l, size: typeof l.size === "string" ? l.size : "" })));
+        setItems(parsed.map((l) => ({ ...l, size: l.size ?? "", style: l.style ?? "",
+          variant_id: l.variant_id ?? null, price: l.price ?? l.product.price,
+          compare_at_price: l.compare_at_price ?? l.product.compare_at_price,
+          stock: l.stock ?? l.product.stock })));
       }
     } catch {
       /* ignore malformed cart */
@@ -39,35 +42,41 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (ready) localStorage.setItem(CART_KEY, JSON.stringify(items));
   }, [items, ready]);
 
-  const add = useCallback((product: Product, quantity = 1, size = "") => {
+  const add = useCallback((product: Product, quantity = 1, size = "", variant?: ProductVariant) => {
+    const variantId = variant?.id ?? null;
     setItems((prev) => {
-      const existing = prev.find((l) => l.product.id === product.id && l.size === size);
+      const existing = prev.find((l) => l.product.id === product.id && l.variant_id === variantId && l.size === (variant?.size ?? size));
       if (existing) {
         return prev.map((l) =>
-          l.product.id === product.id && l.size === size ? { ...l, quantity: l.quantity + quantity } : l,
+          l.product.id === product.id && l.variant_id === variantId && l.size === (variant?.size ?? size)
+            ? { ...l, quantity: Math.min(l.stock, l.quantity + quantity) } : l,
         );
       }
-      return [...prev, { product, quantity, size }];
+      return [...prev, { product, quantity, size: variant?.size ?? size, style: variant?.style ?? "",
+        variant_id: variantId, price: variant?.price ?? product.price,
+        compare_at_price: variant?.compare_at_price ?? product.compare_at_price,
+        stock: variant?.stock ?? product.stock }];
     });
   }, []);
 
-  const updateQuantity = useCallback((productId: number, quantity: number, size = "") => {
+  const updateQuantity = useCallback((productId: number, quantity: number, size = "", variantId: number | null = null) => {
     setItems((prev) =>
       quantity <= 0
-        ? prev.filter((l) => !(l.product.id === productId && l.size === size))
-        : prev.map((l) => (l.product.id === productId && l.size === size ? { ...l, quantity } : l)),
+        ? prev.filter((l) => !(l.product.id === productId && l.size === size && l.variant_id === variantId))
+        : prev.map((l) => (l.product.id === productId && l.size === size && l.variant_id === variantId
+          ? { ...l, quantity: Math.min(l.stock, quantity) } : l)),
     );
   }, []);
 
-  const remove = useCallback((productId: number, size = "") => {
-    setItems((prev) => prev.filter((l) => !(l.product.id === productId && l.size === size)));
+  const remove = useCallback((productId: number, size = "", variantId: number | null = null) => {
+    setItems((prev) => prev.filter((l) => !(l.product.id === productId && l.size === size && l.variant_id === variantId)));
   }, []);
 
   const clear = useCallback(() => setItems([]), []);
 
   const count = useMemo(() => items.reduce((sum, l) => sum + l.quantity, 0), [items]);
   const subtotal = useMemo(
-    () => items.reduce((sum, l) => sum + l.product.price * l.quantity, 0),
+    () => items.reduce((sum, l) => sum + l.price * l.quantity, 0),
     [items],
   );
 

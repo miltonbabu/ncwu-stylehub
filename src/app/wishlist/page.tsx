@@ -48,7 +48,7 @@ export default function WishlistPage() {
 
   const addToCart = (product: Product) => {
     const hasSizes = (product.sizes ?? "").split(",").map((s) => s.trim()).filter(Boolean).length > 0;
-    if (hasSizes) {
+    if (hasSizes || product.variants?.length) {
       router.push(`/product/${product.id}`);
       return;
     }

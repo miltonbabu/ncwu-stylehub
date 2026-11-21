@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS products (
     description       TEXT         NOT NULL DEFAULT '',
     price             DOUBLE PRECISION NOT NULL,
     compare_at_price  DOUBLE PRECISION,
+    cost_price        DOUBLE PRECISION NOT NULL DEFAULT 0,
     stock             INTEGER      NOT NULL DEFAULT 0,
     sizes             VARCHAR(200) NOT NULL DEFAULT '',
     category_id       INTEGER      NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
@@ -38,6 +39,20 @@ CREATE TABLE IF NOT EXISTS products (
     is_active         BOOLEAN      NOT NULL DEFAULT TRUE,
     created_at        TIMESTAMP    NOT NULL DEFAULT NOW()
 );
+
+CREATE TABLE IF NOT EXISTS product_variants (
+    id               SERIAL PRIMARY KEY,
+    product_id       INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+    style            VARCHAR(100) NOT NULL DEFAULT '',
+    size             VARCHAR(50) NOT NULL DEFAULT '',
+    price            DOUBLE PRECISION NOT NULL,
+    compare_at_price DOUBLE PRECISION,
+    cost_price       DOUBLE PRECISION NOT NULL DEFAULT 0,
+    stock            INTEGER NOT NULL DEFAULT 0 CHECK (stock >= 0),
+    image_url        VARCHAR(500) NOT NULL DEFAULT '',
+    UNIQUE (product_id, style, size)
+);
+CREATE INDEX IF NOT EXISTS idx_product_variants_product ON product_variants(product_id);
 
 CREATE TABLE IF NOT EXISTS product_images (
     id         SERIAL PRIMARY KEY,
@@ -61,7 +76,9 @@ CREATE TABLE IF NOT EXISTS cart_items (
     user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
     quantity   INTEGER NOT NULL DEFAULT 1,
-    size       VARCHAR(50)
+    size       VARCHAR(50),
+    variant_id INTEGER REFERENCES product_variants(id) ON DELETE SET NULL,
+    style      VARCHAR(100) NOT NULL DEFAULT ''
 );
 
 CREATE TABLE IF NOT EXISTS orders (
@@ -85,8 +102,28 @@ CREATE TABLE IF NOT EXISTS order_items (
     product_name VARCHAR(200)   NOT NULL,
     unit_price   DOUBLE PRECISION NOT NULL,
     quantity     INTEGER        NOT NULL,
-    size         VARCHAR(50)
+    size         VARCHAR(50),
+    unit_cost    DOUBLE PRECISION NOT NULL DEFAULT 0,
+    variant_id   INTEGER REFERENCES product_variants(id) ON DELETE SET NULL,
+    style        VARCHAR(100) NOT NULL DEFAULT ''
 );
+
+CREATE TABLE IF NOT EXISTS refund_requests (
+    id            SERIAL PRIMARY KEY,
+    order_id      INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+    order_item_id INTEGER NOT NULL REFERENCES order_items(id) ON DELETE CASCADE,
+    user_id       INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    quantity      INTEGER NOT NULL CHECK (quantity > 0),
+    reason        VARCHAR(1000) NOT NULL,
+    status        VARCHAR(20) NOT NULL DEFAULT 'pending',
+    admin_note    VARCHAR(1000) NOT NULL DEFAULT '',
+    requested_at  TIMESTAMP NOT NULL DEFAULT NOW(),
+    resolved_at   TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_refund_requests_user ON refund_requests(user_id, requested_at DESC);
+CREATE INDEX IF NOT EXISTS idx_refund_requests_status ON refund_requests(status, requested_at DESC);
+ALTER TABLE product_variants ENABLE ROW LEVEL SECURITY;
+ALTER TABLE refund_requests ENABLE ROW LEVEL SECURITY;
 
 CREATE TABLE IF NOT EXISTS banners (
     id         SERIAL PRIMARY KEY,

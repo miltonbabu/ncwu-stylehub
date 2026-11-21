@@ -143,14 +143,7 @@ export function SiteFooter() {
             </li>
             <li className="flex items-center gap-2.5">
               <Phone className="h-4 w-4 shrink-0 text-secondary" />
-              <button
-                type="button"
-                onClick={() => showComingSoon("Phone support")}
-                title="Coming soon"
-                className="cursor-pointer transition-colors hover:text-white"
-              >
-                +86 138 0000 0000
-              </button>
+              <a href="tel:17513257179" className="transition-colors hover:text-white">17513257179</a>
             </li>
             <li className="flex items-center gap-2.5">
               <Mail className="h-4 w-4 shrink-0 text-secondary" />

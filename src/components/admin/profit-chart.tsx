@@ -118,7 +118,7 @@ export function ProfitChart({ points, className }: { points: ProfitPoint[]; clas
         width={width}
         height={HEIGHT}
         role="img"
-        aria-label="Revenue and estimated profit over time"
+        aria-label="Revenue and gross margin over time"
         onMouseMove={onMove}
         onMouseLeave={() => setHover(null)}
         className="block overflow-visible"

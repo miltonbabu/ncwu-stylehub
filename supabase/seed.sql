@@ -36,6 +36,34 @@ INSERT INTO products (id, name, slug, description, price, compare_at_price, stoc
 (11, 'Court Classic Low Tops', 'court-classic-low-tops-11', 'Clean leather low-tops with a gum sole. The sneakers that go with literally everything.', 64.90, NULL, 90, 5, 'https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=900&q=70', FALSE, TRUE),
 (12, 'Everyday Leather Tote', 'everyday-leather-tote-12', 'Structured vegan-leather tote with a zip pocket and laptop sleeve. Work-ready and chic.', 44.90, 59.90, 55, 6, 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=70', TRUE, TRUE);
 
+UPDATE products SET sizes = CASE category_id
+    WHEN 1 THEN 'S,M,L,XL' WHEN 2 THEN 'S,M,L,XL' WHEN 3 THEN 'S,M,L,XL'
+    WHEN 4 THEN '28,30,32,34' WHEN 5 THEN '38,39,40,41,42' ELSE '' END
+WHERE category_id BETWEEN 1 AND 5;
+
+-- Demo sourcing costs make the seeded gross-margin charts illustrative, not real accounting data.
+UPDATE products SET cost_price = ROUND(price * 0.4, 2);
+
+INSERT INTO product_variants (product_id, style, size, price, compare_at_price, cost_price, stock, image_url)
+SELECT p.id, options.style, sized.option, p.price, p.compare_at_price, p.cost_price,
+       (p.stock / (sized.option_count * options.style_count))
+           + CASE WHEN ((options.style_position - 1) * sized.option_count + sized.position)
+                    <= (p.stock % (sized.option_count * options.style_count)) THEN 1 ELSE 0 END,
+       p.image_url
+FROM products p
+CROSS JOIN LATERAL (
+    SELECT option, position, COUNT(*) OVER () AS option_count
+    FROM unnest(string_to_array(COALESCE(p.sizes, ''), ',')) WITH ORDINALITY AS item(option, position)
+    WHERE btrim(option) <> ''
+) sized
+CROSS JOIN LATERAL (
+    SELECT style, style_position, COUNT(*) OVER () AS style_count
+    FROM unnest(string_to_array(CASE p.category_id
+        WHEN 1 THEN 'White,Black' WHEN 2 THEN 'Floral,Black' WHEN 3 THEN 'Black,Navy'
+        WHEN 4 THEN 'Blue,Black' WHEN 5 THEN 'White,Black' ELSE 'Regular' END, ','))
+        WITH ORDINALITY AS item(style, style_position)
+) options;
+
 -- Banners
 INSERT INTO banners (id, title, subtitle, image_url, link_url, sort_order, is_active) VALUES
 (1, 'New Season, New Style', 'Autumn Collection 2026 is here — discover fresh silhouettes.', 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1600&q=70', '/shop?category=dresses', 0, TRUE),

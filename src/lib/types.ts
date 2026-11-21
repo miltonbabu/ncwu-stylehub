@@ -22,6 +22,17 @@ export interface ProductImage {
   sort_order: number;
 }
 
+export interface ProductVariant {
+  id: number;
+  style: string;
+  size: string;
+  price: number;
+  compare_at_price: number | null;
+  stock: number;
+  image_url: string;
+  cost_price?: number | null;
+}
+
 export interface Product {
   id: number;
   name: string;
@@ -44,6 +55,7 @@ export interface Product {
   sizes: string;
   /** Purchase cost per unit. Only returned on admin endpoints — absent in the public catalog. */
   cost_price?: number | null;
+  variants: ProductVariant[];
 }
 
 export interface Review {
@@ -66,6 +78,21 @@ export interface OrderItem {
   product_image: string;
   /** Chosen size for this line; null/empty when the product has no sizes. */
   size: string | null;
+  style: string | null;
+}
+
+export interface RefundRequest {
+  id: number;
+  order_id: number;
+  order_item_id: number;
+  product_name: string;
+  quantity: number;
+  amount: number;
+  reason: string;
+  status: "pending" | "approved" | "rejected";
+  admin_note: string;
+  requested_at: string;
+  resolved_at: string | null;
 }
 
 export interface Order {
@@ -189,4 +216,9 @@ export interface CartLine {
   quantity: number;
   /** Chosen size; "" when the product has no sizes. Same product + different size = separate lines. */
   size: string;
+  style: string;
+  variant_id: number | null;
+  price: number;
+  compare_at_price: number | null;
+  stock: number;
 }

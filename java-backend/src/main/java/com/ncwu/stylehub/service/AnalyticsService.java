@@ -51,6 +51,29 @@ public class AnalyticsService {
                 .setParameter("from", from)
                 .getResultList();
 
+        Map<Long, double[]> refundsByOrder = new LinkedHashMap<>();
+        Map<String, double[]> refundsByProduct = new LinkedHashMap<>();
+        List<Object[]> refundRows = em.createQuery(
+                        "SELECT r.order.id, r.quantity, r.orderItem.productName, " +
+                                "r.orderItem.unitPrice, r.orderItem.unitCost " +
+                                "FROM RefundRequest r WHERE r.status = 'approved' AND r.order.createdAt >= :from")
+                .setParameter("from", from).getResultList();
+        for (Object[] refund : refundRows) {
+            long orderId = ((Number) refund[0]).longValue();
+            int quantity = ((Number) refund[1]).intValue();
+            String name = (String) refund[2];
+            double price = ((Number) refund[3]).doubleValue();
+            double cost = ((Number) refund[4]).doubleValue();
+            double[] totals = refundsByOrder.computeIfAbsent(orderId, k -> new double[3]);
+            totals[0] += price * quantity;
+            totals[1] += (price - cost) * quantity;
+            totals[2] += quantity;
+            double[] product = refundsByProduct.computeIfAbsent(name, k -> new double[3]);
+            product[0] += quantity;
+            product[1] += price * quantity;
+            product[2] += (price - cost) * quantity;
+        }
+
         Map<LocalDate, double[]> buckets = new TreeMap<>();
         for (int i = 0; i < days; i += 1) {
             buckets.put(firstDay.plusDays(i), new double[] {0, 0, 0});
@@ -67,33 +90,34 @@ public class AnalyticsService {
         Map<String, double[]> productTotals = new LinkedHashMap<>();
 
         for (Order order : orders) {
-            double orderRevenue = order.total;
+            long[] status = statusCounts.get(order.status);
+            if (status != null) {
+                status[0] += 1;
+            }
+            if ("cancelled".equals(order.status) || "pending".equals(order.status)) {
+                continue;
+            }
+            double[] refunds = refundsByOrder.getOrDefault(order.id, new double[3]);
+            double orderRevenue = order.total - refunds[0];
             double orderProfit = 0;
             long orderUnits = 0;
             for (OrderItem item : order.items) {
                 double lineProfit = (item.unitPrice - item.unitCost) * item.quantity;
                 orderProfit += lineProfit;
                 orderUnits += item.quantity;
-                double[] row = productTotals.computeIfAbsent(item.productName, k -> new double[] {0, 0, 0});
-                row[0] += item.quantity;                          // units
-                row[1] += item.unitPrice * item.quantity;         // revenue
-                row[2] += lineProfit;                             // profit
+                if (!"cancelled".equals(order.status)) {
+                    double[] row = productTotals.computeIfAbsent(item.productName, k -> new double[] {0, 0, 0});
+                    row[0] += item.quantity;                          // units
+                    row[1] += item.unitPrice * item.quantity;         // revenue
+                    row[2] += lineProfit;                             // profit
+                }
             }
-
-            long[] status = statusCounts.get(order.status);
-            if (status != null) {
-                status[0] += 1;
-            }
-
-            // Cancelled orders still count in the status split but must not inflate money totals.
-            if ("cancelled".equals(order.status)) {
-                continue;
-            }
+            orderProfit -= refunds[1];
 
             revenue += orderRevenue;
             profit += orderProfit;
             orderCount += 1;
-            units += orderUnits;
+            units += Math.max(0, orderUnits - (long) refunds[2]);
 
             double[] bucket = buckets.get(
                     order.createdAt.atOffset(ZoneOffset.UTC).atZoneSameInstant(zone).toLocalDate());
@@ -103,6 +127,15 @@ public class AnalyticsService {
                 bucket[2] += 1;
             }
         }
+
+        refundsByProduct.forEach((name, refund) -> {
+            double[] product = productTotals.get(name);
+            if (product != null) {
+                product[0] = Math.max(0, product[0] - refund[0]);
+                product[1] -= refund[1];
+                product[2] -= refund[2];
+            }
+        });
 
         List<AnalyticsPoint> series = new ArrayList<>(days);
         for (Map.Entry<LocalDate, double[]> e : buckets.entrySet()) {

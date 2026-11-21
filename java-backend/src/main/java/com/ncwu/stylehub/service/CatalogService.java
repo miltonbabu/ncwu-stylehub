@@ -14,6 +14,7 @@ import com.ncwu.stylehub.domain.Banner;
 import com.ncwu.stylehub.domain.Category;
 import com.ncwu.stylehub.domain.Product;
 import com.ncwu.stylehub.domain.ProductImage;
+import com.ncwu.stylehub.domain.ProductVariant;
 import com.ncwu.stylehub.domain.Promotion;
 import com.ncwu.stylehub.domain.User;
 import com.ncwu.stylehub.domain.Wishlist;
@@ -24,6 +25,8 @@ import com.ncwu.stylehub.web.dto.StoreDtos.ProductCreateRequest;
 import com.ncwu.stylehub.web.dto.StoreDtos.ProductImageOut;
 import com.ncwu.stylehub.web.dto.StoreDtos.ProductOut;
 import com.ncwu.stylehub.web.dto.StoreDtos.ProductUpdateRequest;
+import com.ncwu.stylehub.web.dto.StoreDtos.ProductVariantIn;
+import com.ncwu.stylehub.web.dto.StoreDtos.ProductVariantOut;
 import com.ncwu.stylehub.web.dto.StoreDtos.PromotionOut;
 
 import jakarta.persistence.EntityManager;
@@ -165,6 +168,9 @@ public class CatalogService {
                 p.images.add(img);
             }
         }
+        if (req.variants() != null && !req.variants().isEmpty()) {
+            replaceVariants(p, req.variants());
+        }
         em.persist(p);
         return toOut(p, new double[] {0, 0}, true);
     }
@@ -218,7 +224,61 @@ public class CatalogService {
         if (req.images() != null) {
             replaceImages(p, req.images());
         }
+        if (req.variants() != null) {
+            replaceVariants(p, req.variants());
+        }
         return toOut(p, ratingSummary(List.of(id)).getOrDefault(id, new double[] {0, 0}), true);
+    }
+
+    private void replaceVariants(Product product, List<ProductVariantIn> inputs) {
+        Map<Long, ProductVariant> existing = new HashMap<>();
+        for (ProductVariant variant : product.variants) {
+            existing.put(variant.id, variant);
+        }
+        List<ProductVariant> next = new ArrayList<>();
+        java.util.Set<String> options = new java.util.HashSet<>();
+        for (ProductVariantIn input : inputs) {
+            String style = normalizeOption(input.style());
+            String size = normalizeOption(input.size());
+            if (!options.add(style.length() + ":" + style.toLowerCase() + size.toLowerCase())) {
+                throw new ApiException(400, "Each style and size combination must be unique");
+            }
+            ProductVariant variant = input.id() != null ? existing.get(input.id()) : null;
+            if (input.id() != null && variant == null) {
+                throw new ApiException(400, "A product option does not belong to this product");
+            }
+            if (variant == null) {
+                variant = new ProductVariant();
+                variant.product = product;
+            }
+            variant.style = style;
+            variant.size = size;
+            variant.price = input.price();
+            variant.compareAtPrice = input.compareAtPrice();
+            variant.costPrice = input.costPrice();
+            variant.stock = input.stock();
+            variant.imageUrl = input.imageUrl() == null ? "" : input.imageUrl().trim();
+            next.add(variant);
+        }
+        product.variants.removeIf(variant -> !next.contains(variant));
+        for (ProductVariant variant : next) {
+            if (!product.variants.contains(variant)) {
+                product.variants.add(variant);
+            }
+        }
+        if (!next.isEmpty()) {
+            product.stock = next.stream().mapToInt(v -> v.stock).sum();
+            ProductVariant lowestPrice = next.stream()
+                    .min(java.util.Comparator.comparingDouble(v -> v.price)).orElseThrow();
+            product.price = lowestPrice.price;
+            product.compareAtPrice = lowestPrice.compareAtPrice;
+            product.sizes = next.stream().map(v -> v.size).filter(s -> !s.isBlank()).distinct()
+                    .collect(java.util.stream.Collectors.joining(","));
+        }
+    }
+
+    private static String normalizeOption(String value) {
+        return value == null ? "" : value.trim();
     }
 
     /** Replaces the product gallery (max 4 URLs) and keeps the primary image in sync. */
@@ -337,7 +397,10 @@ public class CatalogService {
                 p.isFeatured, p.isActive, p.createdAt,
                 p.images.stream().map(i -> new ProductImageOut(i.id, i.imageUrl, i.sortOrder)).toList(),
                 avg, (int) rating[1],
-                includeCost ? p.costPrice : null);
+                includeCost ? p.costPrice : null,
+                p.variants.stream().map(v -> new ProductVariantOut(v.id, v.style, v.size, v.price,
+                        v.compareAtPrice, v.stock, v.imageUrl,
+                        includeCost ? v.costPrice : null)).toList());
     }
 
     private static boolean contains(String text, String q) {

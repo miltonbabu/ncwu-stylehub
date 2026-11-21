@@ -26,6 +26,10 @@ public class OrderItem {
     @JoinColumn(name = "product_id")
     public Product product;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "variant_id")
+    public ProductVariant variant;
+
     @Column(name = "product_name", nullable = false, length = 200)
     public String productName;
 
@@ -42,4 +46,7 @@ public class OrderItem {
     /** Empty = no size. */
     @Column(length = 50)
     public String size = "";
+
+    @Column(nullable = false, length = 100)
+    public String style = "";
 }
