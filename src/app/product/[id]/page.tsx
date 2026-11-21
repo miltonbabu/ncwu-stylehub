@@ -64,7 +64,7 @@ export default function ProductDetailPage() {
 
   if (!product) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-24 text-center">
+      <div className="mx-auto max-w-3xl px-4 py-20 text-center sm:py-24">
         <h1 className="font-heading text-2xl font-bold">Product not found</h1>
         <p className="mt-2 text-gray-500">The product you are looking for does not exist.</p>
         <Button className="mt-6" onClick={() => router.push("/shop")}>
@@ -128,8 +128,8 @@ export default function ProductDetailPage() {
   };
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
-      <nav className="mb-6 flex items-center gap-1.5 text-sm text-gray-500">
+    <div className="mx-auto max-w-7xl px-3 py-6 sm:px-6 sm:py-10">
+      <nav className="mb-5 flex items-center gap-1.5 overflow-x-auto whitespace-nowrap pb-1 text-xs text-gray-500 sm:mb-6 sm:text-sm">
         <Link href="/" className="hover:text-primary">Home</Link>
         <ChevronRight className="h-3.5 w-3.5" />
         <Link href="/shop" className="hover:text-primary">Shop</Link>
@@ -141,7 +141,7 @@ export default function ProductDetailPage() {
         <span className="truncate text-brand-text">{product.name}</span>
       </nav>
 
-      <div className="grid gap-10 lg:grid-cols-2">
+      <div className="grid gap-7 lg:grid-cols-2 lg:gap-10">
         <div>
           <div className="relative aspect-square overflow-hidden rounded-3xl bg-gray-50">
             <img
@@ -195,24 +195,24 @@ export default function ProductDetailPage() {
             >
               {product.category_name}
             </Link>
-            <h1 className="mt-2 font-heading text-3xl font-bold text-brand-text">{product.name}</h1>
-            <div className="mt-3 flex items-center gap-2">
-              <StarRating value={product.avg_rating} size={18} />
-              <span className="text-sm text-gray-500">
+            <h1 className="mt-2 break-words font-heading text-2xl font-bold leading-tight text-brand-text sm:text-3xl">{product.name}</h1>
+            <div className="mt-2 flex flex-wrap items-center gap-2 sm:mt-3">
+              <StarRating value={product.avg_rating} size={16} />
+              <span className="text-xs text-gray-500 sm:text-sm">
                 {product.avg_rating.toFixed(1)} · {product.review_count} review{product.review_count === 1 ? "" : "s"}
               </span>
             </div>
           </div>
 
-          <div className="flex items-baseline gap-3">
-            <span className="font-heading text-3xl font-bold text-brand-text">{formatPrice(product.price)}</span>
+          <div className="flex flex-wrap items-baseline gap-2 sm:gap-3">
+            <span className="font-heading text-2xl font-bold text-brand-text sm:text-3xl">{formatPrice(product.price)}</span>
             {product.compare_at_price && product.compare_at_price > product.price && (
               <span className="text-lg text-gray-400 line-through">{formatPrice(product.compare_at_price)}</span>
             )}
             {discount > 0 && <Badge tone="accent">Save {discount}%</Badge>}
           </div>
 
-          <p className="leading-relaxed text-gray-600">{product.description}</p>
+          <p className="text-sm leading-relaxed text-gray-600 sm:text-base">{product.description}</p>
 
           <div className="flex items-center gap-3">
             <Badge tone={product.stock > 0 ? "green" : "red"}>
@@ -252,8 +252,8 @@ export default function ProductDetailPage() {
             </div>
           )}
 
-          <div className="flex items-center gap-4">
-            <div className="flex items-center rounded-full border border-gray-200">
+          <div className="grid grid-cols-[auto_auto] gap-2 sm:flex sm:items-center sm:gap-4">
+            <div className="flex items-center justify-self-start rounded-full border border-gray-200">
               <button
                 type="button"
                 onClick={() => setQty((q) => Math.max(1, q - 1))}
@@ -272,19 +272,12 @@ export default function ProductDetailPage() {
                 <Plus className="h-4 w-4" />
               </button>
             </div>
-            <Button size="lg" onClick={addToCart} disabled={product.stock <= 0} className="flex-1">
-              <ShoppingBag className="h-5 w-5" aria-hidden />
-              {added ? "Added to Cart!" : "Add to Cart"}
-            </Button>
-            <Button size="lg" variant="accent" onClick={buyNow} disabled={product.stock <= 0}>
-              Buy Now
-            </Button>
             <button
               type="button"
               onClick={toggleWishlist}
               disabled={savingWish}
               className={cn(
-                "flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border transition-colors",
+                "flex h-12 w-12 cursor-pointer items-center justify-center justify-self-end rounded-full border transition-colors sm:order-last",
                 saved
                   ? "border-red-300 bg-red-50 text-red-500"
                   : "border-gray-200 text-gray-400 hover:border-red-300 hover:text-red-500",
@@ -294,9 +287,16 @@ export default function ProductDetailPage() {
             >
               <Heart className={cn("h-5 w-5", saved && "fill-current")} />
             </button>
+            <Button size="lg" onClick={addToCart} disabled={product.stock <= 0} className="col-span-2 w-full min-w-0 sm:col-auto sm:flex-1">
+              <ShoppingBag className="h-5 w-5" aria-hidden />
+              {added ? "Added to Cart!" : "Add to Cart"}
+            </Button>
+            <Button size="lg" variant="accent" onClick={buyNow} disabled={product.stock <= 0} className="col-span-2 w-full sm:col-auto sm:w-auto">
+              Buy Now
+            </Button>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 rounded-2xl bg-brand-bg p-5">
+          <div className="grid gap-3 rounded-2xl bg-brand-bg p-4 sm:grid-cols-2 sm:gap-4 sm:p-5">
             <div className="flex items-center gap-2.5">
               <Truck className="h-5 w-5 text-primary" aria-hidden />
               <div>
