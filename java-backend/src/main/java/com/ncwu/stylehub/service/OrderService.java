@@ -37,6 +37,15 @@ public class OrderService {
     private static final double FREE_SHIPPING_THRESHOLD = 80.0;
     private static final double SHIPPING_FEE = 6.9;
 
+    /**
+     * Refund reads always fetch the associations as real entities: these entities map
+     * public fields (field access), so a lazy to-one proxy cannot intercept the read and
+     * returns null for every field, including the identifier.
+     */
+    private static final String REFUND_QUERY =
+            "SELECT r FROM RefundRequest r JOIN FETCH r.order o JOIN FETCH o.user "
+                    + "JOIN FETCH r.orderItem JOIN FETCH r.user";
+
     @PersistenceContext
     private EntityManager em;
 
@@ -199,22 +208,26 @@ public class OrderService {
 
     @Transactional(readOnly = true)
     public List<RefundRequestOut> myRefunds(long userId) {
-        return em.createQuery("SELECT r FROM RefundRequest r WHERE r.user.id = :uid ORDER BY r.requestedAt DESC",
+        return em.createQuery(REFUND_QUERY + " WHERE r.user.id = :uid ORDER BY r.requestedAt DESC",
                         RefundRequest.class)
                 .setParameter("uid", userId).getResultList().stream().map(OrderService::toRefundOut).toList();
     }
 
     @Transactional
     public RefundRequestOut requestRefund(long userId, RefundRequestCreate req) {
-        OrderItem item = em.find(OrderItem.class, req.orderItemId());
-        if (item == null) {
+        List<OrderItem> found = em.createQuery(
+                        "SELECT i FROM OrderItem i JOIN FETCH i.order o JOIN FETCH o.user WHERE i.id = :id",
+                        OrderItem.class)
+                .setParameter("id", req.orderItemId()).getResultList();
+        if (found.isEmpty()) {
             throw new ApiException(404, "Order item not found");
         }
-        // Lock the parent order row rather than the item: order_items has nullable eager
-        // joins (product, variant), and PostgreSQL rejects FOR UPDATE on the nullable side
-        // of an outer join, which made every refund request fail with a 500.
-        Order order = em.find(Order.class, item.order.id, LockModeType.PESSIMISTIC_WRITE);
-        if (order == null || order.user.id != userId) {
+        OrderItem item = found.get(0);
+        Order order = item.order;
+        // Lock the order row, not the item: order_items has nullable eager joins (product,
+        // variant) and PostgreSQL rejects FOR UPDATE on the nullable side of an outer join.
+        em.lock(order, LockModeType.PESSIMISTIC_WRITE);
+        if (order.user.id != userId) {
             throw new ApiException(404, "Order item not found");
         }
         if (!List.of("shipped", "completed").contains(order.status)) {
@@ -249,16 +262,19 @@ public class OrderService {
 
     @Transactional(readOnly = true)
     public List<RefundRequestOut> adminRefunds() {
-        return em.createQuery("SELECT r FROM RefundRequest r ORDER BY r.requestedAt DESC", RefundRequest.class)
+        return em.createQuery(REFUND_QUERY + " ORDER BY r.requestedAt DESC", RefundRequest.class)
                 .getResultList().stream().map(OrderService::toRefundOut).toList();
     }
 
     @Transactional
     public RefundRequestOut decideRefund(long refundId, RefundDecision decision) {
-        RefundRequest refund = em.find(RefundRequest.class, refundId, LockModeType.PESSIMISTIC_WRITE);
-        if (refund == null) {
+        List<RefundRequest> found = em.createQuery(REFUND_QUERY + " WHERE r.id = :id", RefundRequest.class)
+                .setParameter("id", refundId).getResultList();
+        if (found.isEmpty()) {
             throw new ApiException(404, "Refund request not found");
         }
+        RefundRequest refund = found.get(0);
+        em.lock(refund, LockModeType.PESSIMISTIC_WRITE);
         if (!"pending".equals(refund.status)) {
             throw new ApiException(400, "This refund request has already been resolved");
         }
@@ -268,7 +284,11 @@ public class OrderService {
         refund.status = decision.status();
         refund.adminNote = decision.adminNote() == null ? "" : decision.adminNote().trim();
         refund.resolvedAt = java.time.LocalDateTime.now(ZoneOffset.UTC);
-        mailService.sendRefundDecision(refund);
+        try {
+            mailService.sendRefundDecision(refund);
+        } catch (RuntimeException e) {
+            log.warn("Refund #{} decided but the customer email failed: {}", refund.id, e.getMessage());
+        }
         return toRefundOut(refund);
     }
 
