@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="public/stylehub-icon.png" alt="NCWU StyleHub logo" width="96" />
+<img src="public/stylehub-mark.svg" alt="NCWU StyleHub logo" width="88" />
 
 # NCWU StyleHub
 
