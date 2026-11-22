@@ -3,6 +3,8 @@ package com.ncwu.stylehub.service;
 import java.time.ZoneOffset;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +30,8 @@ import jakarta.persistence.PersistenceContext;
 /** Checkout and order history — stock decrement + totals with the store's shipping rules. */
 @Service
 public class OrderService {
+
+    private static final Logger log = LoggerFactory.getLogger(OrderService.class);
 
     /** Mirrors frontend/src/lib/utils.ts (FREE_SHIPPING_THRESHOLD / shippingFor). */
     private static final double FREE_SHIPPING_THRESHOLD = 80.0;
@@ -202,28 +206,44 @@ public class OrderService {
 
     @Transactional
     public RefundRequestOut requestRefund(long userId, RefundRequestCreate req) {
-        OrderItem item = em.find(OrderItem.class, req.orderItemId(), LockModeType.PESSIMISTIC_WRITE);
-        if (item == null || item.order.user.id != userId) {
+        OrderItem item = em.find(OrderItem.class, req.orderItemId());
+        if (item == null) {
             throw new ApiException(404, "Order item not found");
         }
-        if (!List.of("shipped", "completed").contains(item.order.status)) {
+        // Lock the parent order row rather than the item: order_items has nullable eager
+        // joins (product, variant), and PostgreSQL rejects FOR UPDATE on the nullable side
+        // of an outer join, which made every refund request fail with a 500.
+        Order order = em.find(Order.class, item.order.id, LockModeType.PESSIMISTIC_WRITE);
+        if (order == null || order.user.id != userId) {
+            throw new ApiException(404, "Order item not found");
+        }
+        if (!List.of("shipped", "completed").contains(order.status)) {
             throw new ApiException(400, "Refunds can be requested after an order has shipped");
         }
-        Long alreadyRequested = em.createQuery(
-                        "SELECT COALESCE(SUM(r.quantity), 0) FROM RefundRequest r " +
-                                "WHERE r.orderItem.id = :itemId AND r.status IN ('pending', 'approved')", Long.class)
-                .setParameter("itemId", item.id).getSingleResult();
+        // Plain per-row read instead of COALESCE(SUM(...)): the aggregate mixes int and
+        // long types in JPQL, which Hibernate rejects at query-compile time.
+        int alreadyRequested = em.createQuery(
+                        "SELECT r.quantity FROM RefundRequest r " +
+                                "WHERE r.orderItem.id = :itemId AND r.status IN ('pending', 'approved')", Integer.class)
+                .setParameter("itemId", item.id).getResultList().stream()
+                .mapToInt(Integer::intValue).sum();
         if (alreadyRequested + req.quantity() > item.quantity) {
             throw new ApiException(400, "Refund quantity exceeds the unrefunded items");
         }
         RefundRequest refund = new RefundRequest();
-        refund.order = item.order;
+        refund.order = order;
         refund.orderItem = item;
-        refund.user = item.order.user;
+        refund.user = order.user;
         refund.quantity = req.quantity();
         refund.reason = req.reason().trim();
         em.persist(refund);
-        mailService.sendRefundRequested(refund);
+        try {
+            mailService.sendRefundRequested(refund);
+        } catch (RuntimeException e) {
+            // The request is already saved; a mail/template problem must not roll it back.
+            log.warn("Refund request for order #{} saved but the admin email failed: {}",
+                    order.id, e.getMessage());
+        }
         return toRefundOut(refund);
     }
 
