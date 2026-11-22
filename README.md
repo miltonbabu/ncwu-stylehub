@@ -6,6 +6,14 @@
 
 ### A complete online clothing store with a Java API, PostgreSQL, and an AWS deployment path
 
+<p>
+  <strong>Read this in:</strong>
+  &nbsp;
+  <kbd>English</kbd>
+  &nbsp;·&nbsp;
+  <a href="README.zh-CN.md"><kbd>简体中文</kbd></a>
+</p>
+
 A full-stack e-commerce application built for the course design **Comprehensive Internship in Computer System Development 2** at North China University of Water Resources and Electric Power, School of Information Engineering.
 
 The project combines a responsive Next.js storefront, a role-based administration panel, a Java Spring Boot REST API, a PostgreSQL database, and a production-style single-server deployment on AWS EC2.
@@ -227,7 +235,8 @@ Order totals, stock changes, and shipping are calculated on the server. The brow
 ├── package.json                 Frontend dependencies and scripts
 ├── next.config.ts               Next.js configuration
 ├── vercel.json                  Vercel build configuration
-└── README.md
+├── README.md                    English README
+└── README.zh-CN.md              Simplified Chinese README
 ```
 
 In the course workspace, `frontend/` contains the `src/`, `public/`, `package.json`, and Next.js configuration shown above. The backend, deployment kit, and database files stay at the workspace root.
@@ -1098,5 +1107,9 @@ No open-source license is included in this repository. Treat the code as course 
 **NCWU StyleHub**
 
 Built with Next.js, Spring Boot, PostgreSQL, and AWS.
+
+<br />
+
+<a href="README.zh-CN.md"><kbd>简体中文</kbd></a>
 
 </div>
