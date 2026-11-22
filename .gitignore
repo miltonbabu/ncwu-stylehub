@@ -42,6 +42,10 @@ frontend/
 # ---- Course materials, reports & plans (local only) ----
 course-docs/
 docs/
+design-system/
+deliverables/
+*.docx
+AGENTS.md
 plan.md
 report_template_text.md
 requirements_extracted.md

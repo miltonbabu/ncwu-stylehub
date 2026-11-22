@@ -11,7 +11,8 @@ services:
       SECRET_KEY: ${SECRET_KEY:?Set a strong SECRET_KEY in deploy/aws/.env}
       CORS_ORIGINS: ${CORS_ORIGINS:?Set your Vercel origin in deploy/aws/.env}
       JAVA_TOOL_OPTIONS: -Xms128m -Xmx512m -XX:MaxMetaspaceSize=192m -XX:+ExitOnOutOfMemoryError
-      APP_DEMO_ENABLED: "false"
+      APP_DEMO_ENABLED: ${APP_DEMO_ENABLED:-false}
+      APP_DEMO_ADMIN_ENABLED: ${APP_DEMO_ADMIN_ENABLED:-false}
       CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
       CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
       CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
