@@ -13,9 +13,9 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const PAYMENT_METHODS = [
-  { id: "alipay", label: "Alipay", icon: Wallet, desc: "Pay with your Alipay account (支付宝)" },
-  { id: "wechat", label: "WeChat Pay", icon: QrCode, desc: "Pay with WeChat Pay (微信支付)" },
-  { id: "cod", label: "Cash on Delivery", icon: Banknote, desc: "Pay when you receive the order (货到付款)" },
+  { id: "alipay", label: "Alipay", icon: Wallet, desc: "Pay with your Alipay account (支付宝)", available: false },
+  { id: "wechat", label: "WeChat Pay", icon: QrCode, desc: "Pay with WeChat Pay (微信支付)", available: false },
+  { id: "cod", label: "Cash on Delivery", icon: Banknote, desc: "Pay when you receive the order (货到付款)", available: true },
 ];
 
 export default function CheckoutPage() {
@@ -25,7 +25,8 @@ export default function CheckoutPage() {
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
-  const [payment, setPayment] = useState("alipay");
+  const [payment, setPayment] = useState("cod");
+  const [comingSoon, setComingSoon] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [placed, setPlaced] = useState<Order | null>(null);
@@ -155,33 +156,68 @@ export default function CheckoutPage() {
 
           <section className="rounded-2xl border border-gray-100 bg-white p-6">
             <h2 className="font-heading text-lg font-bold text-brand-text">2. Payment Method</h2>
+            <p className="mt-1 text-xs text-gray-500">
+              Cash on Delivery is available now. Online payments are on the way.
+            </p>
             <div className="mt-5 space-y-3">
-              {PAYMENT_METHODS.map((method) => (
-                <label
-                  key={method.id}
-                  className={cn(
-                    "flex cursor-pointer items-center gap-4 rounded-xl border p-4 transition-colors duration-200",
-                    payment === method.id
-                      ? "border-primary bg-primary/5"
-                      : "border-gray-200 hover:border-primary/40",
-                  )}
-                >
-                  <input
-                    type="radio"
-                    name="payment"
-                    value={method.id}
-                    checked={payment === method.id}
-                    onChange={() => setPayment(method.id)}
-                    className="h-4 w-4 accent-primary"
-                  />
-                  <method.icon className="h-5 w-5 text-primary" aria-hidden />
-                  <div>
-                    <p className="text-sm font-semibold text-brand-text">{method.label}</p>
-                    <p className="text-xs text-gray-500">{method.desc}</p>
-                  </div>
-                </label>
-              ))}
+              {PAYMENT_METHODS.map((method) => {
+                const disabled = !method.available;
+                return (
+                  <label
+                    key={method.id}
+                    aria-disabled={disabled}
+                    onClick={() => {
+                      if (disabled) {
+                        setComingSoon(`${method.label} is coming soon. Please choose Cash on Delivery.`);
+                      } else {
+                        setComingSoon("");
+                        setPayment(method.id);
+                      }
+                    }}
+                    className={cn(
+                      "flex items-center gap-4 rounded-xl border p-4 transition-colors duration-200",
+                      disabled
+                        ? "cursor-not-allowed border-dashed border-gray-200 bg-gray-50/60"
+                        : payment === method.id
+                          ? "cursor-pointer border-primary bg-primary/5"
+                          : "cursor-pointer border-gray-200 hover:border-primary/40",
+                    )}
+                  >
+                    <input
+                      type="radio"
+                      name="payment"
+                      value={method.id}
+                      checked={payment === method.id}
+                      disabled={disabled}
+                      onChange={() => setPayment(method.id)}
+                      className="h-4 w-4 accent-primary disabled:cursor-not-allowed"
+                    />
+                    <method.icon
+                      className={cn("h-5 w-5", disabled ? "text-gray-400" : "text-primary")}
+                      aria-hidden
+                    />
+                    <div className="flex-1">
+                      <p className={cn("text-sm font-semibold", disabled ? "text-gray-500" : "text-brand-text")}>
+                        {method.label}
+                      </p>
+                      <p className="text-xs text-gray-500">{method.desc}</p>
+                    </div>
+                    {disabled ? (
+                      <span className="shrink-0 rounded-full bg-gray-200/80 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-gray-500">
+                        Coming soon
+                      </span>
+                    ) : (
+                      payment === method.id && <BadgeCheck className="h-5 w-5 shrink-0 text-primary" />
+                    )}
+                  </label>
+                );
+              })}
             </div>
+            {comingSoon && (
+              <p role="status" className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700">
+                {comingSoon}
+              </p>
+            )}
           </section>
         </div>
 
