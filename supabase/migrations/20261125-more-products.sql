@@ -45,26 +45,26 @@ WHERE slug IN ('black-graphic-cotton-tee-13', 'everyday-white-crew-tee-14',
                'city-canvas-backpack-23', 'slim-leather-card-wallet-24');
 
 INSERT INTO product_variants (product_id, style, size, price, compare_at_price, cost_price, stock, image_url)
-SELECT p.id, options.style, sized.option, p.price, p.compare_at_price, p.cost_price,
-       (p.stock / (sized.option_count * options.style_count))
-           + CASE WHEN ((options.style_position - 1) * sized.option_count + sized.position)
-                    <= (p.stock % (sized.option_count * options.style_count)) THEN 1 ELSE 0 END,
+SELECT p.id, styles.style_name, sizes.size_name, p.price, p.compare_at_price, p.cost_price,
+       (p.stock / (sizes.size_count * styles.style_count))
+           + CASE WHEN ((styles.style_position - 1) * sizes.size_count + sizes.size_position)
+                    <= (p.stock % (sizes.size_count * styles.style_count)) THEN 1 ELSE 0 END,
        p.image_url
 FROM products p
 JOIN categories c ON c.id = p.category_id
 CROSS JOIN LATERAL (
-    SELECT option, position, COUNT(*) OVER () AS option_count
-    FROM unnest(string_to_array(COALESCE(p.sizes, ''), ',')) WITH ORDINALITY AS item(option, position)
-    WHERE btrim(option) <> ''
-) sized
+    SELECT v.size_name, v.size_position, COUNT(*) OVER () AS size_count
+    FROM unnest(string_to_array(COALESCE(p.sizes, ''), ',')) WITH ORDINALITY AS v(size_name, size_position)
+    WHERE btrim(v.size_name) <> ''
+) sizes
 CROSS JOIN LATERAL (
-    SELECT style, style_position, COUNT(*) OVER () AS style_count
+    SELECT v.style_name, v.style_position, COUNT(*) OVER () AS style_count
     FROM unnest(string_to_array(CASE c.slug
         WHEN 't-shirts' THEN 'White,Black' WHEN 'dresses' THEN 'Floral,Black'
         WHEN 'jackets-coats' THEN 'Black,Navy' WHEN 'jeans-pants' THEN 'Blue,Black'
         WHEN 'shoes' THEN 'White,Black' ELSE 'Regular' END, ','))
-        WITH ORDINALITY AS item(style, style_position)
-) options
+        WITH ORDINALITY AS v(style_name, style_position)
+) styles
 WHERE p.slug IN ('black-graphic-cotton-tee-13', 'everyday-white-crew-tee-14',
                  'scarlet-floral-midi-dress-15', 'white-ruffle-tiered-dress-16',
                  'washed-leather-biker-jacket-17', 'suede-bomber-jacket-18',
