@@ -52,7 +52,7 @@ Paste the generated value into `SECRET_KEY`; do not reuse a secret shared in cha
 
 Use the actual hostname and username shown in Supabase. Separate credentials avoid URL-encoding issues in passwords. Optional Cloudinary and Resend settings are in the template. Supabase frontend API keys are not needed by this Java backend.
 
-Back up an existing database before deployment. For the product-option and refund features, first run `supabase/migrations/20261121-product-variants-refunds.sql` in Supabase Dashboard > SQL Editor. It adds variant inventory and refund requests, and backfills existing sized products without deleting orders. Do not rerun the seed file on a live database. The backend also uses Hibernate schema auto-update, but that does not perform this existing-product backfill.
+Back up an existing database before deployment. For the product-option and refund features, first run `supabase/migrations/20261121-product-variants-refunds.sql` in Supabase Dashboard > SQL Editor. It adds variant inventory and refund requests, and backfills existing sized products without deleting orders. Run `supabase/migrations/20261125-more-products.sql` the same way to add the twelve extra catalog products; it matches rows by slug, so it is safe to re-run. Do not rerun the seed file on a live database. The backend also uses Hibernate schema auto-update, but that does not perform this existing-product backfill.
 
 Production Compose disables demo seeding and the runner that resets demo passwords on every startup. Existing demo accounts remain in the database: change their passwords or disable them before going live. Ensure you retain a working admin account; a brand-new empty database will not receive demo accounts with this configuration.
 

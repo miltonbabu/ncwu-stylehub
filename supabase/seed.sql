@@ -34,7 +34,19 @@ INSERT INTO products (id, name, slug, description, price, compare_at_price, stoc
 (9, 'High-Rise Wide Leg Trousers', 'high-rise-wide-leg-trousers-9', 'Fluid wide-leg trousers with a flattering high rise. Office to evening, effortless.', 54.90, NULL, 60, 4, 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&w=900&q=70', FALSE, TRUE),
 (10, 'Retro Runner Sneakers', 'retro-runner-sneakers-10', 'Cushioned retro runners with a suede-and-mesh upper. All-day comfort, iconic style.', 69.90, 89.90, 75, 5, 'https://images.unsplash.com/photo-1560769629-975ec94e6a86?auto=format&fit=crop&w=900&q=70', TRUE, TRUE),
 (11, 'Court Classic Low Tops', 'court-classic-low-tops-11', 'Clean leather low-tops with a gum sole. The sneakers that go with literally everything.', 64.90, NULL, 90, 5, 'https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=900&q=70', FALSE, TRUE),
-(12, 'Everyday Leather Tote', 'everyday-leather-tote-12', 'Structured vegan-leather tote with a zip pocket and laptop sleeve. Work-ready and chic.', 44.90, 59.90, 55, 6, 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=70', TRUE, TRUE);
+(12, 'Everyday Leather Tote', 'everyday-leather-tote-12', 'Structured vegan-leather tote with a zip pocket and laptop sleeve. Work-ready and chic.', 44.90, 59.90, 55, 6, 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=70', TRUE, TRUE),
+(13, 'Black Graphic Cotton Tee', 'black-graphic-cotton-tee-13', 'Heavyweight cotton tee with a subtle front print and relaxed shoulders. Washed for a lived-in feel.', 26.90, 36.90, 100, 1, 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&w=900&q=70', FALSE, TRUE),
+(14, 'Everyday White Crew Tee', 'everyday-white-crew-tee-14', 'A clean crew-neck staple in soft combed cotton. Layer it, tuck it, live in it.', 22.90, NULL, 130, 1, 'https://images.unsplash.com/photo-1581655353564-df123a1eb820?auto=format&fit=crop&w=900&q=70', FALSE, TRUE),
+(15, 'Scarlet Floral Midi Dress', 'scarlet-floral-midi-dress-15', 'Statement floral midi with a cinched waist and swishy skirt. Made for golden-hour moments.', 64.90, 84.90, 36, 2, 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?auto=format&fit=crop&w=900&q=70', TRUE, TRUE),
+(16, 'White Ruffle Tiered Dress', 'white-ruffle-tiered-dress-16', 'Airy tiered dress with ruffle trims and a smocked back. Breezy from brunch to beach.', 69.90, NULL, 30, 2, 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&fit=crop&w=900&q=70', FALSE, TRUE),
+(17, 'Washed Leather Biker Jacket', 'washed-leather-biker-jacket-17', 'Buttery washed leather biker with asymmetric zip and quilted shoulders. An heirloom layer.', 149.90, 189.90, 16, 3, 'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=900&q=70', TRUE, TRUE),
+(18, 'Suede Bomber Jacket', 'suede-bomber-jacket-18', 'Soft suede bomber with ribbed trims and a satin lining. Effortless throw-on outerwear.', 109.90, 139.90, 20, 3, 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=900&q=70', FALSE, TRUE),
+(19, 'Distressed Straight Jeans', 'distressed-straight-jeans-19', 'Straight-leg rigid denim with hand-finished distressing. Vintage character, modern fit.', 52.90, 69.90, 80, 4, 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=900&q=70', TRUE, TRUE),
+(20, 'High-Waist Tailored Trousers', 'high-waist-tailored-trousers-20', 'Pleated high-waist trousers with a fluid drape and tapered leg. Desk to dinner in one step.', 49.90, NULL, 70, 4, 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&w=900&q=70', FALSE, TRUE),
+(21, 'Minimal White Court Sneakers', 'minimal-white-court-sneakers-21', 'Clean low-profile court sneakers in smooth leather. Minimal by design, versatile by nature.', 72.90, 92.90, 65, 5, 'https://images.unsplash.com/photo-1608231387042-66d1773070a5?auto=format&fit=crop&w=900&q=70', TRUE, TRUE),
+(22, 'Floral Print Heeled Pumps', 'floral-print-heeled-pumps-22', 'Pointed-toe pumps in a hand-painted floral print with a sculpted kitten heel.', 79.90, 99.90, 25, 5, 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&w=900&q=70', FALSE, TRUE),
+(23, 'City Canvas Backpack', 'city-canvas-backpack-23', 'Water-resistant canvas backpack with a padded laptop sleeve and anti-theft back pocket.', 46.90, 62.90, 50, 6, 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=900&q=70', TRUE, TRUE),
+(24, 'Slim Leather Card Wallet', 'slim-leather-card-wallet-24', 'Slim full-grain leather card holder with RFID blocking. Fits front pockets, not attention.', 24.90, 34.90, 90, 6, 'https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&w=900&q=70', FALSE, TRUE);
 
 UPDATE products SET sizes = CASE category_id
     WHEN 1 THEN 'S,M,L,XL' WHEN 2 THEN 'S,M,L,XL' WHEN 3 THEN 'S,M,L,XL'
@@ -42,7 +54,7 @@ UPDATE products SET sizes = CASE category_id
 WHERE category_id BETWEEN 1 AND 5;
 
 -- Demo sourcing costs make the seeded gross-margin charts illustrative, not real accounting data.
-UPDATE products SET cost_price = ROUND(price * 0.4, 2);
+UPDATE products SET cost_price = ROUND((price * 0.4)::numeric, 2);
 
 INSERT INTO product_variants (product_id, style, size, price, compare_at_price, cost_price, stock, image_url)
 SELECT p.id, options.style, sized.option, p.price, p.compare_at_price, p.cost_price,

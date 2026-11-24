@@ -34,7 +34,7 @@ function ShopContent() {
 
   useEffect(() => {
     setLoading(true);
-    const qs = new URLSearchParams({ page_size: "24", sort });
+    const qs = new URLSearchParams({ page_size: "48", sort });
     if (categorySlug) qs.set("category", categorySlug);
     if (search) qs.set("search", search);
     api<Product[]>(`/products?${qs}`)

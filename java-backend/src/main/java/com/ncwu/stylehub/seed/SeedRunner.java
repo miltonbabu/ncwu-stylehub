@@ -43,7 +43,19 @@ public class SeedRunner implements CommandLineRunner {
             Map.entry("sneakers", "1560769629-975ec94e6a86"),
             Map.entry("sneakers2", "1549298916-b41d501d3772"),
             Map.entry("yellow_jacket", "1469334031218-e382a71b716b"),
-            Map.entry("coat_m", "1434389677669-e08b4cac3105"));
+            Map.entry("coat_m", "1434389677669-e08b4cac3105"),
+            Map.entry("tee_black_hanger", "1583743814966-8936f5b7be1a"),
+            Map.entry("tee_white_wall", "1581655353564-df123a1eb820"),
+            Map.entry("dress_red_floral", "1572804013309-59a88b7e92f1"),
+            Map.entry("dress_white_ruffle", "1515372039744-b8f02a3ae446"),
+            Map.entry("leather_jacket", "1551028719-00167b16eac5"),
+            Map.entry("bomber", "1591047139829-d91aecb6caea"),
+            Map.entry("jeans_distressed", "1541099649105-f69ad21f3246"),
+            Map.entry("trousers_pink", "1594633312681-425c7b97ccd1"),
+            Map.entry("sneaker_white", "1608231387042-66d1773070a5"),
+            Map.entry("heels_floral", "1543163521-1bf539c55dd2"),
+            Map.entry("backpack", "1553062407-98eeb64c6a62"),
+            Map.entry("wallet", "1627123424574-724758594e93"));
 
     @PersistenceContext
     private EntityManager em;
@@ -107,6 +119,30 @@ public class SeedRunner implements CommandLineRunner {
                         "Clean leather low-tops with a gum sole. The sneakers that go with literally everything."},
                 {"Everyday Leather Tote", "accessories", 44.90, 59.90, 55, true, "bags",
                         "Structured vegan-leather tote with a zip pocket and laptop sleeve. Work-ready and chic."},
+                {"Black Graphic Cotton Tee", "t-shirts", 26.90, 36.90, 100, false, "tee_black_hanger",
+                        "Heavyweight cotton tee with a subtle front print and relaxed shoulders. Washed for a lived-in feel."},
+                {"Everyday White Crew Tee", "t-shirts", 22.90, null, 130, false, "tee_white_wall",
+                        "A clean crew-neck staple in soft combed cotton. Layer it, tuck it, live in it."},
+                {"Scarlet Floral Midi Dress", "dresses", 64.90, 84.90, 36, true, "dress_red_floral",
+                        "Statement floral midi with a cinched waist and swishy skirt. Made for golden-hour moments."},
+                {"White Ruffle Tiered Dress", "dresses", 69.90, null, 30, false, "dress_white_ruffle",
+                        "Airy tiered dress with ruffle trims and a smocked back. Breezy from brunch to beach."},
+                {"Washed Leather Biker Jacket", "jackets-coats", 149.90, 189.90, 16, true, "leather_jacket",
+                        "Buttery washed leather biker with asymmetric zip and quilted shoulders. An heirloom layer."},
+                {"Suede Bomber Jacket", "jackets-coats", 109.90, 139.90, 20, false, "bomber",
+                        "Soft suede bomber with ribbed trims and a satin lining. Effortless throw-on outerwear."},
+                {"Distressed Straight Jeans", "jeans-pants", 52.90, 69.90, 80, true, "jeans_distressed",
+                        "Straight-leg rigid denim with hand-finished distressing. Vintage character, modern fit."},
+                {"High-Waist Tailored Trousers", "jeans-pants", 49.90, null, 70, false, "trousers_pink",
+                        "Pleated high-waist trousers with a fluid drape and tapered leg. Desk to dinner in one step."},
+                {"Minimal White Court Sneakers", "shoes", 72.90, 92.90, 65, true, "sneaker_white",
+                        "Clean low-profile court sneakers in smooth leather. Minimal by design, versatile by nature."},
+                {"Floral Print Heeled Pumps", "shoes", 79.90, 99.90, 25, false, "heels_floral",
+                        "Pointed-toe pumps in a hand-painted floral print with a sculpted kitten heel."},
+                {"City Canvas Backpack", "accessories", 46.90, 62.90, 50, true, "backpack",
+                        "Water-resistant canvas backpack with a padded laptop sleeve and anti-theft back pocket."},
+                {"Slim Leather Card Wallet", "accessories", 24.90, 34.90, 90, false, "wallet",
+                        "Slim full-grain leather card holder with RFID blocking. Fits front pockets, not attention."},
         };
         Product[] created = new Product[products.length];
         for (int i = 0; i < products.length; i++) {
