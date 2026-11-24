@@ -18,6 +18,8 @@
 
 项目包含响应式 Next.js 店面、基于角色的后台管理、Java Spring Boot REST API、PostgreSQL 数据库，以及部署在 AWS EC2 单机上的生产式方案。
 
+> **在线演示：** [https://shop.ncwu.site](https://shop.ncwu.site) — 在登录页点击 **快速演示登录** 即可体验顾客或只读管理员账号，也可以直接注册新账号。
+
 [项目概览](#项目概览) · [功能](#功能) · [架构](#架构) · [快速开始](#快速开始5-分钟本地运行) · [AWS 部署](#部署-api-到-aws) · [UI/UX 设计](#uiux-设计系统) · [API](#api-参考) · [故障排查](#故障排查)
 
 ![Next.js](https://img.shields.io/badge/Next.js-16.4-171717?style=flat-square&logo=nextdotjs)

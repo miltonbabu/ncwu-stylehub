@@ -15,46 +15,16 @@ next-env.d.ts
 data/
 uploads/
 *.db
-*.mv.db
-*.trace.db
 *.log
-build.log
 
 # ---- Environment & secrets ----
 .env
 .env.*
 !.env.example
 
-# ---- Local tool caches / agent data ----
-.tools/
-.tooling/
-.codebuddy/
+# ---- Local tooling ----
 .vercel/
 .cache/
-.trae/
-.mcp.json
-.codex/
-.agents/
-.claude/
-agent/
-skills-lock.json
-.tmp_supabase_migration.js
-
-# ---- frontend/ is its own git repository (deployed to Vercel separately) ----
-frontend/
-
-# ---- Course materials, reports & plans (local only) ----
-course-docs/
-docs/
-design-system/
-deliverables/
-*.docx
-AGENTS.md
-plan.md
-report_template_text.md
-requirements_extracted.md
-docx_unpacked/
-docx_report_unpacked/
 
 # ---- IDE / OS ----
 .idea/
@@ -72,5 +42,4 @@ desktop.ini
 *.tar
 *.tar.gz
 *.zip
-!deploy/aws/.env.example
 .screenshots/

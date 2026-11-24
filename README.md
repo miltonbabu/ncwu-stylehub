@@ -18,6 +18,8 @@ A full-stack e-commerce application built for the course design **Comprehensive 
 
 The project combines a responsive Next.js storefront, a role-based administration panel, a Java Spring Boot REST API, a PostgreSQL database, and a production-style single-server deployment on AWS EC2.
 
+> **Live app:** [https://shop.ncwu.site](https://shop.ncwu.site) — sign in with the **Quick demo access** buttons for a customer or read-only admin session, or register a new account.
+
 [Overview](#overview) · [Features](#features) · [Architecture](#architecture) · [Quick start](#quick-start-run-locally-in-5-minutes) · [AWS deployment](#deploy-the-api-to-aws) · [UI/UX design](#uiux-design-system) · [API](#api-reference) · [Troubleshooting](#troubleshooting)
 
 ![Next.js](https://img.shields.io/badge/Next.js-16.4-171717?style=flat-square&logo=nextdotjs)
