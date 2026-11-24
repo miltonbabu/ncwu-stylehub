@@ -74,19 +74,19 @@ export default function HomePage() {
 
       <CategoryGrid categories={categories} />
 
-      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
+      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
         <div className="mb-8 flex items-end justify-between">
           <div>
-            <p className="inline-flex items-center gap-1.5 text-sm font-semibold uppercase tracking-widest text-accent">
+            <p className="eyebrow inline-flex items-center gap-1.5 text-accent">
               <Flame className="h-4 w-4" aria-hidden /> Handpicked
             </p>
-            <h2 className="mt-1 font-heading text-2xl font-bold text-brand-text sm:text-3xl">
+            <h2 className="mt-1.5 font-heading text-2xl font-bold text-brand-text sm:text-3xl">
               Featured Products
             </h2>
           </div>
           <Link
             href="/shop"
-            className="hidden items-center gap-1.5 text-sm font-semibold text-primary hover:underline sm:inline-flex"
+            className="link-underline hidden items-center gap-1.5 text-sm font-semibold text-primary sm:inline-flex"
           >
             View all <ArrowRight className="h-4 w-4" />
           </Link>
@@ -116,19 +116,19 @@ export default function HomePage() {
 
       <PromoSections promotions={promotions} />
 
-      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
+      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
         <div className="mb-8 flex items-end justify-between">
           <div>
-            <p className="inline-flex items-center gap-1.5 text-sm font-semibold uppercase tracking-widest text-primary">
+            <p className="eyebrow inline-flex items-center gap-1.5 text-primary">
               <Sparkles className="h-4 w-4" aria-hidden /> Just In
             </p>
-            <h2 className="mt-1 font-heading text-2xl font-bold text-brand-text sm:text-3xl">
+            <h2 className="mt-1.5 font-heading text-2xl font-bold text-brand-text sm:text-3xl">
               New Arrivals
             </h2>
           </div>
           <Link
             href="/shop?sort=newest"
-            className="hidden items-center gap-1.5 text-sm font-semibold text-primary hover:underline sm:inline-flex"
+            className="link-underline hidden items-center gap-1.5 text-sm font-semibold text-primary sm:inline-flex"
           >
             Shop new <ArrowRight className="h-4 w-4" />
           </Link>

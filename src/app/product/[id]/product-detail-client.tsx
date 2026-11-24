@@ -57,7 +57,7 @@ export function ProductDetailClient() {
   if (loading) {
     return (
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-2">
-        <div className="aspect-square animate-pulse rounded-3xl bg-gray-100" />
+        <div className="aspect-square animate-pulse rounded-[1.75rem] bg-gray-100" />
         <div className="space-y-4">
           <div className="h-4 w-24 animate-pulse rounded bg-gray-100" />
           <div className="h-8 w-3/4 animate-pulse rounded bg-gray-100" />
@@ -141,21 +141,21 @@ export function ProductDetailClient() {
 
   return (
     <div className="mx-auto max-w-7xl px-3 py-6 sm:px-6 sm:py-10">
-      <nav className="mb-5 flex items-center gap-1.5 overflow-x-auto whitespace-nowrap pb-1 text-xs text-gray-500 sm:mb-6 sm:text-sm">
-        <Link href="/" className="hover:text-primary">Home</Link>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <Link href="/shop" className="hover:text-primary">Shop</Link>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <Link href={`/shop?category=${product.category_slug}`} className="hover:text-primary">
+      <nav className="mb-5 flex items-center gap-1.5 overflow-x-auto whitespace-nowrap pb-1 text-xs text-gray-400 sm:mb-6 sm:text-sm">
+        <Link href="/" className="transition-colors hover:text-primary">Home</Link>
+        <ChevronRight className="h-3.5 w-3.5 shrink-0 text-gray-300" />
+        <Link href="/shop" className="transition-colors hover:text-primary">Shop</Link>
+        <ChevronRight className="h-3.5 w-3.5 shrink-0 text-gray-300" />
+        <Link href={`/shop?category=${product.category_slug}`} className="transition-colors hover:text-primary">
           {product.category_name}
         </Link>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <span className="truncate text-brand-text">{product.name}</span>
+        <ChevronRight className="h-3.5 w-3.5 shrink-0 text-gray-300" />
+        <span className="truncate font-medium text-brand-text">{product.name}</span>
       </nav>
 
-      <div className="grid gap-7 lg:grid-cols-2 lg:gap-10">
-        <div>
-          <div className="relative aspect-square overflow-hidden rounded-3xl bg-gray-50">
+      <div className="grid gap-7 lg:grid-cols-2 lg:gap-12">
+        <div className="lg:sticky lg:top-24 lg:self-start">
+          <div className="group relative aspect-square overflow-hidden rounded-[1.75rem] bg-gray-50 shadow-soft ring-1 ring-black/5">
             <img
               key={activeImage}
               src={cloudinaryImg(activeImage, { width: 1000, height: 1000 })}
@@ -163,7 +163,7 @@ export function ProductDetailClient() {
               onError={(e) => {
                 (e.target as HTMLImageElement).src = imgFallback(`product-${product.id}`);
               }}
-              className="h-full w-full animate-fade-in object-cover transition-transform duration-500 hover:scale-[1.03]"
+              className="h-full w-full animate-fade-in object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
             />
             <div className="absolute left-4 top-4 flex flex-col gap-1.5">
               {discount > 0 && <Badge tone="accent">-{discount}%</Badge>}
@@ -171,7 +171,7 @@ export function ProductDetailClient() {
             </div>
           </div>
           {gallery.length > 1 && (
-            <div className="mt-4 flex gap-2 overflow-x-auto pb-1 sm:gap-3">
+            <div className="mt-4 flex gap-2.5 overflow-x-auto pb-1 sm:gap-3">
               {gallery.map((url) => (
                 <button
                   key={url}
@@ -180,8 +180,8 @@ export function ProductDetailClient() {
                   className={cn(
                     "h-16 w-16 shrink-0 cursor-pointer overflow-hidden rounded-xl border-2 transition-all duration-200 sm:h-20 sm:w-20",
                     activeImage === url
-                      ? "scale-105 border-primary shadow-md shadow-primary/10"
-                      : "border-transparent opacity-80 hover:border-gray-300 hover:opacity-100",
+                      ? "border-primary shadow-md shadow-primary/20 ring-2 ring-primary/15"
+                      : "border-transparent opacity-75 hover:border-gray-200 hover:opacity-100",
                   )}
                   aria-label="View product image"
                 >
@@ -203,12 +203,12 @@ export function ProductDetailClient() {
           <div>
             <Link
               href={`/shop?category=${product.category_slug}`}
-              className="text-sm font-semibold uppercase tracking-wider text-primary hover:underline"
+              className="eyebrow text-primary transition-opacity hover:opacity-80"
             >
               {product.category_name}
             </Link>
-            <h1 className="mt-2 break-words font-heading text-2xl font-bold leading-tight text-brand-text sm:text-3xl">{product.name}</h1>
-            <div className="mt-2 flex flex-wrap items-center gap-2 sm:mt-3">
+            <h1 className="mt-2 break-words font-heading text-2xl font-bold leading-tight tracking-tight text-brand-text sm:text-[2rem]">{product.name}</h1>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
               <StarRating value={product.avg_rating} size={16} />
               <span className="text-xs text-gray-500 sm:text-sm">
                 {product.avg_rating.toFixed(1)} · {product.review_count} review{product.review_count === 1 ? "" : "s"}
@@ -216,8 +216,8 @@ export function ProductDetailClient() {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-baseline gap-2 sm:gap-3">
-            <span className="font-heading text-2xl font-bold text-brand-text sm:text-3xl">{formatPrice(currentPrice)}</span>
+          <div className="flex flex-wrap items-baseline gap-2 border-y border-gray-100 py-4 sm:gap-3">
+            <span className="font-heading text-3xl font-bold text-brand-text">{formatPrice(currentPrice)}</span>
             {currentCompareAt && currentCompareAt > currentPrice && (
               <span className="text-lg text-gray-400 line-through">{formatPrice(currentCompareAt)}</span>
             )}
@@ -243,7 +243,12 @@ export function ProductDetailClient() {
                     setSize(first?.size ?? "");
                     setSizeError(false);
                   }} aria-pressed={style === option}
-                    className={cn("cursor-pointer rounded-full border px-4 py-2 text-sm font-medium", style === option ? "border-primary bg-primary text-white" : "border-gray-200 text-gray-600 hover:border-primary hover:text-primary")}>{option}</button>
+                    className={cn(
+                      "cursor-pointer rounded-full border px-4 py-2 text-sm font-medium transition-all duration-200 active:scale-95",
+                      style === option
+                        ? "border-primary bg-primary text-white shadow-sm shadow-primary/25"
+                        : "border-gray-200 text-gray-600 hover:border-primary/50 hover:bg-brand-soft/50 hover:text-primary",
+                    )}>{option}</button>
                 ))}
               </div>
             </div>
@@ -266,10 +271,10 @@ export function ProductDetailClient() {
                     disabled={!!product.variants?.length && !product.variants.some((v) => v.style === style && v.size === opt && v.stock > 0)}
                     aria-pressed={size === opt}
                     className={cn(
-                      "cursor-pointer rounded-full border px-4 py-2 text-sm font-medium transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40",
+                      "min-w-11 cursor-pointer rounded-full border px-4 py-2 text-sm font-medium transition-all duration-200 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40",
                       size === opt
-                        ? "border-primary bg-primary text-white shadow-md shadow-primary/20"
-                        : "border-gray-200 text-gray-600 hover:border-primary hover:text-primary",
+                        ? "border-primary bg-primary text-white shadow-sm shadow-primary/25"
+                        : "border-gray-200 text-gray-600 hover:border-primary/50 hover:bg-brand-soft/50 hover:text-primary",
                     )}
                   >
                     {opt}
@@ -282,21 +287,21 @@ export function ProductDetailClient() {
             </div>
           )}
 
-          <div className="grid grid-cols-[auto_auto] gap-2 sm:flex sm:items-center sm:gap-4">
-            <div className="flex items-center justify-self-start rounded-full border border-gray-200">
+          <div className="grid grid-cols-[auto_auto] gap-2 sm:flex sm:items-center sm:gap-3">
+            <div className="flex items-center justify-self-start rounded-full border border-gray-200 bg-white shadow-sm">
               <button
                 type="button"
                 onClick={() => setQty((q) => Math.max(1, q - 1))}
-                className="cursor-pointer rounded-l-full px-4 py-2.5 text-gray-500 hover:bg-brand-soft"
+                className="cursor-pointer rounded-l-full px-4 py-2.5 text-gray-500 transition-colors hover:bg-brand-soft hover:text-primary"
                 aria-label="Decrease quantity"
               >
                 <Minus className="h-4 w-4" />
               </button>
-              <span className="w-10 text-center font-semibold">{qty}</span>
+              <span className="w-10 text-center font-semibold tabular-nums">{qty}</span>
               <button
                 type="button"
                 onClick={() => setQty((q) => Math.min(availableStock, q + 1))}
-                className="cursor-pointer rounded-r-full px-4 py-2.5 text-gray-500 hover:bg-brand-soft"
+                className="cursor-pointer rounded-r-full px-4 py-2.5 text-gray-500 transition-colors hover:bg-brand-soft hover:text-primary"
                 aria-label="Increase quantity"
               >
                 <Plus className="h-4 w-4" />
@@ -307,10 +312,10 @@ export function ProductDetailClient() {
               onClick={toggleWishlist}
               disabled={savingWish}
               className={cn(
-                "flex h-12 w-12 cursor-pointer items-center justify-center justify-self-end rounded-full border transition-colors sm:order-last",
+                "flex h-12 w-12 cursor-pointer items-center justify-center justify-self-end rounded-full border transition-all duration-200 active:scale-95 sm:order-last",
                 saved
-                  ? "border-red-300 bg-red-50 text-red-500"
-                  : "border-gray-200 text-gray-400 hover:border-red-300 hover:text-red-500",
+                  ? "border-red-200 bg-red-50 text-red-500"
+                  : "border-gray-200 bg-white text-gray-400 hover:border-red-200 hover:bg-red-50 hover:text-red-500",
                 savingWish && "opacity-60",
               )}
               aria-label={saved ? "Remove from wishlist" : "Add to wishlist"}
@@ -330,20 +335,24 @@ export function ProductDetailClient() {
             const share = { title: product.name, text: product.description, url: window.location.href };
             if (navigator.share) await navigator.share(share).catch(() => undefined);
             else if (navigator.clipboard) await navigator.clipboard.writeText(share.url);
-          }} className="inline-flex min-h-10 w-fit items-center gap-2 text-sm font-medium text-primary hover:underline">
+          }} className="inline-flex min-h-10 w-fit items-center gap-2 text-sm font-medium text-gray-500 transition-colors hover:text-primary">
             <Share2 className="h-4 w-4" aria-hidden /> Share product
           </button>
 
-          <div className="grid gap-3 rounded-2xl bg-brand-bg p-4 sm:grid-cols-2 sm:gap-4 sm:p-5">
+          <div className="grid gap-3 rounded-2xl border border-gray-100 bg-brand-soft/40 p-4 sm:grid-cols-2 sm:gap-4 sm:p-5">
             <div className="flex items-center gap-2.5">
-              <Truck className="h-5 w-5 text-primary" aria-hidden />
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-primary shadow-sm">
+                <Truck className="h-[18px] w-[18px]" aria-hidden />
+              </span>
               <div>
                 <p className="text-sm font-semibold text-brand-text">Free Shipping</p>
                 <p className="text-xs text-gray-500">Orders over ¥80</p>
               </div>
             </div>
             <div className="flex items-center gap-2.5">
-              <ShieldCheck className="h-5 w-5 text-primary" aria-hidden />
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-primary shadow-sm">
+                <ShieldCheck className="h-[18px] w-[18px]" aria-hidden />
+              </span>
               <div>
                 <p className="text-sm font-semibold text-brand-text">Secure Checkout</p>
                 <p className="text-xs text-gray-500">100% protected payment</p>

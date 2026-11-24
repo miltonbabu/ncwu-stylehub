@@ -78,7 +78,7 @@ export function HeroCarousel({ banners }: { banners?: Banner[] }) {
 
   return (
     <section
-      className="relative mx-auto h-[420px] max-w-7xl touch-pan-y overflow-hidden rounded-3xl sm:h-[480px] lg:h-[540px]"
+      className="relative mx-auto h-[420px] max-w-7xl touch-pan-y overflow-hidden rounded-[1.75rem] shadow-lift ring-1 ring-black/5 sm:h-[480px] sm:rounded-[2rem] lg:h-[540px]"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onTouchStart={onTouchStart}
@@ -107,25 +107,27 @@ export function HeroCarousel({ banners }: { banners?: Banner[] }) {
             }}
             className="h-full w-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-brand-text/90 via-brand-text/50 to-transparent" />
-          <div className="absolute inset-y-0 left-0 flex max-w-xl flex-col justify-center gap-4 p-6 sm:p-12 lg:p-16">
-            <span className="w-fit rounded-full bg-accent px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider text-white sm:text-xs">
+          <div className="absolute inset-0 bg-gradient-to-r from-brand-text/95 via-brand-text/60 to-brand-text/10" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+          <div className="absolute inset-y-0 left-0 flex max-w-xl flex-col justify-center gap-4 p-6 sm:gap-5 sm:p-12 lg:p-16">
+            <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-accent px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-white shadow-lg shadow-black/20 ring-1 ring-white/25 sm:text-xs">
               Limited Time
             </span>
-            <h1 className="font-heading text-[26px] font-bold leading-tight text-white sm:text-5xl">
+            <h1 className="font-heading text-[28px] font-bold leading-[1.08] tracking-tight text-white drop-shadow-sm sm:text-5xl lg:text-6xl">
               {slide.title}
             </h1>
-            <p className="max-w-md text-sm leading-relaxed text-brand-tint sm:text-lg">{slide.subtitle}</p>
+            <p className="max-w-md text-sm leading-relaxed text-white/80 sm:text-lg">{slide.subtitle}</p>
             <div className="flex flex-wrap gap-3 pt-1 sm:pt-2">
               <Link
                 href={slide.link_url}
-                className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-white shadow-lg shadow-primary/30 transition-all duration-200 hover:bg-primary-dark hover:scale-105 hover:shadow-xl hover:shadow-primary/40 sm:h-12 sm:px-7 sm:text-base"
+                className="group inline-flex h-11 cursor-pointer items-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-white shadow-lg shadow-primary/40 transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary-dark hover:shadow-xl hover:shadow-primary/50 sm:h-12 sm:px-7 sm:text-base"
               >
-                Shop Now <ArrowRight className="h-4 w-4" aria-hidden />
+                Shop Now
+                <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" aria-hidden />
               </Link>
               <Link
                 href="/shop"
-                className="inline-flex h-11 cursor-pointer items-center rounded-full border-2 border-white/70 bg-white/10 px-6 text-sm font-semibold text-white backdrop-blur-sm transition-all duration-200 hover:bg-white/20 hover:border-white hover:scale-105 sm:h-12 sm:px-7 sm:text-base"
+                className="inline-flex h-11 cursor-pointer items-center rounded-full border-2 border-white/60 bg-white/10 px-6 text-sm font-semibold text-white backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-white hover:bg-white/20 sm:h-12 sm:px-7 sm:text-base"
               >
                 Browse All
               </Link>
@@ -139,20 +141,20 @@ export function HeroCarousel({ banners }: { banners?: Banner[] }) {
         type="button"
         onClick={() => go(-1)}
         aria-label="Previous slide"
-        className="absolute left-4 top-1/2 hidden h-12 w-12 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/90 text-brand-text shadow-lg backdrop-blur-sm transition-all hover:bg-white hover:scale-110 hover:shadow-xl sm:flex"
+        className="absolute left-4 top-1/2 hidden h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-white/40 bg-white/80 text-brand-text shadow-lg backdrop-blur-md transition-all duration-200 hover:scale-105 hover:bg-white hover:shadow-xl sm:flex"
       >
-        <ChevronLeft className="h-6 w-6" />
+        <ChevronLeft className="h-5 w-5" />
       </button>
       <button
         type="button"
         onClick={() => go(1)}
         aria-label="Next slide"
-        className="absolute right-4 top-1/2 hidden h-12 w-12 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/90 text-brand-text shadow-lg backdrop-blur-sm transition-all hover:bg-white hover:scale-110 hover:shadow-xl sm:flex"
+        className="absolute right-4 top-1/2 hidden h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-white/40 bg-white/80 text-brand-text shadow-lg backdrop-blur-md transition-all duration-200 hover:scale-105 hover:bg-white hover:shadow-xl sm:flex"
       >
-        <ChevronRight className="h-6 w-6" />
+        <ChevronRight className="h-5 w-5" />
       </button>
 
-      <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2 sm:bottom-5">
+      <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-black/20 px-2.5 py-1.5 backdrop-blur-sm sm:bottom-6">
         {slides.map((slide, i) => (
           <button
             key={slide.id}
@@ -161,8 +163,8 @@ export function HeroCarousel({ banners }: { banners?: Banner[] }) {
             aria-label={`Go to slide ${i + 1}`}
             aria-current={i === index}
             className={cn(
-              "h-2 cursor-pointer rounded-full transition-all duration-300",
-              i === index ? "w-8 bg-white" : "w-2 bg-white/50 hover:bg-white/80",
+              "h-1.5 cursor-pointer rounded-full transition-all duration-300",
+              i === index ? "w-7 bg-white" : "w-1.5 bg-white/55 hover:bg-white/85",
             )}
           />
         ))}

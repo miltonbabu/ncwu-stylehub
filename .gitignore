@@ -7,6 +7,10 @@ build/
 target/
 *.class
 
+# ---- Next.js generated files ----
+next-env.d.ts
+*.tsbuildinfo
+
 # ---- Local runtime data ----
 data/
 uploads/

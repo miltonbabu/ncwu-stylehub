@@ -294,14 +294,14 @@ export default function OrderDetailPage() {
                   setRefundItem(refundItem === item.id ? null : item.id);
                   setRefundQty(1);
                 }} className="min-h-10 text-sm font-medium text-primary hover:underline">Request refund</button>}
-                {refundItem === item.id && <div className="grid w-full gap-3 rounded-lg bg-gray-50 p-3 sm:grid-cols-[100px_1fr_auto]">
+                {refundItem === item.id && <div className="grid w-full min-w-0 gap-3 rounded-lg bg-gray-50 p-3 sm:grid-cols-[100px_minmax(0,1fr)_auto]">
                   <label className="text-xs font-medium text-gray-600">Quantity
                     <input type="number" min="1" max={item.quantity} value={refundQty} onChange={(e) => setRefundQty(Math.max(1, Math.min(item.quantity, Number(e.target.value))))}
                       className="mt-1 h-10 w-full rounded-md border border-gray-200 bg-white px-2 text-sm" />
                   </label>
-                  <label className="text-xs font-medium text-gray-600">Reason
+                  <label className="min-w-0 text-xs font-medium text-gray-600">Reason
                     <input value={refundReason} maxLength={1000} onChange={(e) => setRefundReason(e.target.value)} placeholder="Why are you requesting a refund?" required
-                      className="mt-1 h-10 w-full rounded-md border border-gray-200 bg-white px-3 text-sm" />
+                      className="mt-1 h-10 w-full min-w-0 rounded-md border border-gray-200 bg-white px-3 text-sm" />
                   </label>
                   <Button type="button" disabled={busy || !refundReason.trim()} onClick={() => submitRefund(item.id)} className="self-end">Submit</Button>
                 </div>}

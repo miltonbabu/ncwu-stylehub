@@ -68,23 +68,23 @@ export function SiteFooter() {
   if (pathname?.startsWith("/admin")) return null;
 
   return (
-    <footer className="bg-footer-gradient mt-12 border-t border-white/10 text-white">
-      <div className="mx-auto grid max-w-7xl gap-8 px-4 py-9 sm:px-6 sm:py-10 md:grid-cols-4">
+    <footer className="bg-footer-gradient mt-16 border-t border-white/10 text-white">
+      <div className="mx-auto grid max-w-7xl gap-9 px-4 py-12 sm:px-6 sm:py-14 md:grid-cols-4">
         <div>
           <Link href="/" aria-label="NCWU StyleHub home" className="inline-flex rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">
             <BrandLogo inverted />
           </Link>
-          <p className="mt-3 text-sm leading-relaxed text-white/75">
+          <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/70">
             Everyday style, considered. Discover pieces you&apos;ll reach for again and again,
             at prices that feel right.
           </p>
-          <div className="mt-4 flex gap-2.5">
+          <div className="mt-5 flex gap-2.5">
             <button
               type="button"
               onClick={() => showComingSoon("Facebook page")}
               aria-label="Facebook (coming soon)"
               title="Coming soon"
-              className="cursor-pointer rounded-full bg-white/10 p-2 transition-colors hover:bg-primary"
+              className="cursor-pointer rounded-full bg-white/10 p-2 ring-1 ring-white/10 transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary hover:ring-primary/50"
             >
               <FacebookIcon className="h-4 w-4" />
             </button>
@@ -93,7 +93,7 @@ export function SiteFooter() {
               onClick={() => showComingSoon("Instagram page")}
               aria-label="Instagram (coming soon)"
               title="Coming soon"
-              className="cursor-pointer rounded-full bg-white/10 p-2 transition-colors hover:bg-primary"
+              className="cursor-pointer rounded-full bg-white/10 p-2 ring-1 ring-white/10 transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary hover:ring-primary/50"
             >
               <InstagramIcon className="h-4 w-4" />
             </button>
@@ -102,7 +102,7 @@ export function SiteFooter() {
               onClick={() => showComingSoon("X page")}
               aria-label="X (coming soon)"
               title="Coming soon"
-              className="cursor-pointer rounded-full bg-white/10 p-2 transition-colors hover:bg-primary"
+              className="cursor-pointer rounded-full bg-white/10 p-2 ring-1 ring-white/10 transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary hover:ring-primary/50"
             >
               <XIcon className="h-4 w-4" />
             </button>
@@ -110,8 +110,8 @@ export function SiteFooter() {
         </div>
 
         <div>
-          <h3 className="font-heading text-xs font-semibold uppercase tracking-wider text-white/90">Shop</h3>
-          <ul className="mt-3 space-y-2 text-sm text-white/75">
+          <h3 className="font-heading text-xs font-semibold uppercase tracking-[0.14em] text-white">Shop</h3>
+          <ul className="mt-4 space-y-2.5 text-sm text-white/65">
             <li><Link href="/shop" className="cursor-pointer transition-colors hover:text-white">All Products</Link></li>
             <li><Link href="/shop?category=t-shirts" className="cursor-pointer transition-colors hover:text-white">T-Shirts</Link></li>
             <li><Link href="/shop?category=dresses" className="cursor-pointer transition-colors hover:text-white">Dresses</Link></li>
@@ -121,8 +121,8 @@ export function SiteFooter() {
         </div>
 
         <div>
-          <h3 className="font-heading text-xs font-semibold uppercase tracking-wider text-white/90">Help</h3>
-          <ul className="mt-3 space-y-2 text-sm text-white/75">
+          <h3 className="font-heading text-xs font-semibold uppercase tracking-[0.14em] text-white">Help</h3>
+          <ul className="mt-4 space-y-2.5 text-sm text-white/65">
             <li><Link href="/orders" className="cursor-pointer transition-colors hover:text-white">Order Tracking</Link></li>
             <li><Link href="/account" className="cursor-pointer transition-colors hover:text-white">My Account</Link></li>
             <li><Link href="/wishlist" className="cursor-pointer transition-colors hover:text-white">Saved Items</Link></li>
@@ -135,8 +135,8 @@ export function SiteFooter() {
         </div>
 
         <div>
-          <h3 className="font-heading text-xs font-semibold uppercase tracking-wider text-white/90">Contact</h3>
-          <ul className="mt-3 space-y-2.5 text-sm text-white/75">
+          <h3 className="font-heading text-xs font-semibold uppercase tracking-[0.14em] text-white">Contact</h3>
+          <ul className="mt-4 space-y-3 text-sm text-white/65">
             <li className="flex items-start gap-2.5">
               <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-secondary" />
               <span>NCWU Business Street, F1 2nd Floor, Zhengzhou, Henan, China</span>
@@ -156,7 +156,7 @@ export function SiteFooter() {
       </div>
 
       <div className="border-t border-white/10">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 py-4 text-xs text-white/60 sm:flex-row sm:px-6">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 py-5 text-xs text-white/55 sm:flex-row sm:px-6">
           <p>© {year} NCWU StyleHub. All rights reserved.</p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <span className="inline-flex items-center gap-1.5" title="Alipay">
