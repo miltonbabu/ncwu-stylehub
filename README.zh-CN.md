@@ -329,11 +329,9 @@ npm run dev
 | 角色 | 邮箱 | 密码 | 权限 |
 | --- | --- | --- | --- |
 | 顾客 | `user@shop.ncwu.site` | `demo@123` | 店面、购物车、结算、订单、收藏、评价 |
-| 演示管理员 | `demo-admin@shop.ncwu.site` | `demo-admin@123` | 只读仪表盘、商品、评价、外观 |
-| 完整管理员（仅 Supabase 种子） | `admin@shop.ncwu.site` | `admin@123` | 完整后台；请立即修改密码 |
-| 完整管理员（本地 H2） | 默认无 | 默认无 | 需要提升已注册账号，见下文 |
+| 管理员 | `admin@shop.ncwu.site` | `t00` | 完整后台。同一时间只允许一个管理员会话，再次登录会替换旧会话 |
 
-> **重要：** 本地 H2 数据库不会创建完整管理员，这是刻意设计。演示管理员是只读角色。要在本地管理商品、用户、订单与退款，请按[创建完整管理员](#创建完整管理员)提升自己的账号。
+> **重要：** 后端每次启动都会创建 `admin@shop.ncwu.site` 管理员，因此该账号始终可登录。可用 `ADMIN_EMAIL`、`ADMIN_PASSWORD` 覆盖。只读演示管理员已移除。
 
 ### 5. 冒烟测试
 
@@ -427,9 +425,8 @@ APP_DEMO_ADMIN_ENABLED=false
 | `CORS_ORIGINS` | 生产环境 | `http://localhost:3000,http://127.0.0.1:3000` | 允许的前端来源，逗号分隔，不要有空格，不要带尾部斜杠。从操作系统环境变量读取。 |
 | `SERVER_PORT` | 否 | `8080` | API 监听端口。 |
 | `APP_DEMO_ENABLED` | 否 | `true` | 写入演示商品与演示顾客。生产环境设为 `false`。 |
-| `APP_DEMO_ADMIN_ENABLED` | 否 | `true` | 创建只读演示管理员。生产环境设为 `false`。 |
-| `DEMO_ADMIN_EMAIL` | 否 | `demo-admin@shop.ncwu.site` | 演示管理员邮箱，仅在启用演示管理员时使用。 |
-| `DEMO_ADMIN_PASSWORD` | 否 | `demo-admin@123` | 演示管理员密码，仅在启用演示管理员时使用。 |
+| `ADMIN_EMAIL` | 否 | `admin@shop.ncwu.site` | 每次启动时确保存在的管理员登录邮箱。 |
+| `ADMIN_PASSWORD` | 否 | `t00` | 管理员密码，每次启动都会重新写入。 |
 | `CLOUDINARY_CLOUD_NAME` | 否 | 空 | Cloudinary cloud name。 |
 | `CLOUDINARY_API_KEY` | 否 | 空 | Cloudinary API Key。 |
 | `CLOUDINARY_API_SECRET` | 否 | 空 | Cloudinary API Secret，仅后端使用。 |

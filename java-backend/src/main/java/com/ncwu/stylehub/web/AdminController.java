@@ -22,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.ncwu.stylehub.exception.ApiException;
 import com.ncwu.stylehub.security.AuthInterceptor;
+import com.ncwu.stylehub.service.AdminDeleteQuotaService;
 import com.ncwu.stylehub.service.AnalyticsService;
 import com.ncwu.stylehub.service.CatalogService;
 import com.ncwu.stylehub.service.CloudinaryUploader;
@@ -61,16 +62,18 @@ public class AdminController {
     private final AnalyticsService analyticsService;
     private final NewsletterService newsletterService;
     private final ContactService contactService;
+    private final AdminDeleteQuotaService deleteQuotaService;
 
     public AdminController(CatalogService catalogService, OrderService orderService, StoreService storeService,
                            AnalyticsService analyticsService, NewsletterService newsletterService,
-                           ContactService contactService) {
+                           ContactService contactService, AdminDeleteQuotaService deleteQuotaService) {
         this.catalogService = catalogService;
         this.orderService = orderService;
         this.storeService = storeService;
         this.analyticsService = analyticsService;
         this.newsletterService = newsletterService;
         this.contactService = contactService;
+        this.deleteQuotaService = deleteQuotaService;
     }
 
     /* ---------------- Products ---------------- */
@@ -98,8 +101,11 @@ public class AdminController {
 
     @DeleteMapping("/products/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable long id) {
+    public void delete(@PathVariable long id, HttpServletRequest request) {
+        long userId = AuthInterceptor.userId(request);
+        deleteQuotaService.assertCanDeleteProduct(userId);
         catalogService.deleteProduct(id);
+        deleteQuotaService.recordProductDelete(userId);
     }
 
     @PostMapping("/products/{id}/images")
@@ -200,8 +206,11 @@ public class AdminController {
 
     @DeleteMapping("/orders/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteOrder(@PathVariable long id) {
+    public void deleteOrder(@PathVariable long id, HttpServletRequest request) {
+        long userId = AuthInterceptor.userId(request);
+        deleteQuotaService.assertCanDeleteOrder(userId);
         orderService.deleteOrder(id);
+        deleteQuotaService.recordOrderDelete(userId);
     }
 
     @GetMapping("/refunds")

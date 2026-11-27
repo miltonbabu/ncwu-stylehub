@@ -3,6 +3,10 @@ package com.ncwu.stylehub.security;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,16 +14,20 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import com.ncwu.stylehub.exception.ApiException;
+import com.ncwu.stylehub.service.AdminSessionService;
 
 class AuthInterceptorTest {
 
     private JwtService jwtService;
+    private AdminSessionService adminSessions;
     private AuthInterceptor interceptor;
 
     @BeforeEach
     void setUp() {
         jwtService = new JwtService();
-        interceptor = new AuthInterceptor(jwtService);
+        adminSessions = mock(AdminSessionService.class);
+        when(adminSessions.isCurrent(anyLong(), anyString())).thenReturn(true);
+        interceptor = new AuthInterceptor(jwtService, adminSessions);
     }
 
     @Test
@@ -54,6 +62,15 @@ class AuthInterceptorTest {
     void regularAdminKeepsFullAdminAccess() {
         assertAllowed("DELETE", "/api/v1/admin/products/12", "admin");
         assertAllowed("GET", "/api/v1/admin/users", "admin");
+    }
+
+    @Test
+    void adminTokenIsRejectedOnceAnotherAdminSignsIn() {
+        when(adminSessions.isCurrent(anyLong(), anyString())).thenReturn(false);
+        MockHttpServletRequest request = request("GET", "/api/v1/admin/orders", "admin");
+        ApiException error = assertThrows(ApiException.class,
+                () -> interceptor.preHandle(request, new MockHttpServletResponse(), new Object()));
+        assertEquals(401, error.getStatus());
     }
 
     private void assertAllowed(String method, String path) {

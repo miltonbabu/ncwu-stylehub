@@ -7,7 +7,6 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.ncwu.stylehub.config.Env;
 import com.ncwu.stylehub.domain.Banner;
 import com.ncwu.stylehub.domain.Category;
 import com.ncwu.stylehub.domain.Product;
@@ -67,10 +66,6 @@ public class SeedRunner implements CommandLineRunner {
         if (productCount != null && productCount > 0) {
             return;
         }
-
-        String demoAdminEmail = Env.get("DEMO_ADMIN_EMAIL", "demo-admin@shop.ncwu.site");
-        User admin = findOrCreateUser("Demo Admin", demoAdminEmail,
-                Env.get("DEMO_ADMIN_PASSWORD", "demo-admin@123"), "demo_admin");
 
         User demo = findOrCreateUser("Demo Customer", "user@shop.ncwu.site", "demo@123", "customer");
 

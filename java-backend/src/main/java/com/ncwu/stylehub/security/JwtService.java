@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.UUID;
 
 import javax.crypto.SecretKey;
 
@@ -41,6 +42,7 @@ public class JwtService {
     public String create(long userId, String role) {
         Instant exp = Instant.now().plus(expireMinutes, ChronoUnit.MINUTES);
         return Jwts.builder()
+                .id(UUID.randomUUID().toString())
                 .subject(String.valueOf(userId))
                 .claim("role", role)
                 .expiration(Date.from(exp))
@@ -50,5 +52,10 @@ public class JwtService {
 
     public Claims parse(String token) {
         return Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
+    }
+
+    /** Token id ({@code jti}) — used to allow only one live administrator session. */
+    public String jti(String token) {
+        return parse(token).getId();
     }
 }

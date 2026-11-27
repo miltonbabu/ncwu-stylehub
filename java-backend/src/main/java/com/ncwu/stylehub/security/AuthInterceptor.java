@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import com.ncwu.stylehub.exception.ApiException;
+import com.ncwu.stylehub.service.AdminSessionService;
 
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,9 +22,11 @@ public class AuthInterceptor implements HandlerInterceptor {
     public static final String ATTR_ROLE = "stylehub.role";
 
     private final JwtService jwtService;
+    private final AdminSessionService adminSessionService;
 
-    public AuthInterceptor(JwtService jwtService) {
+    public AuthInterceptor(JwtService jwtService, AdminSessionService adminSessionService) {
         this.jwtService = jwtService;
+        this.adminSessionService = adminSessionService;
     }
 
     @Override
@@ -52,6 +55,11 @@ public class AuthInterceptor implements HandlerInterceptor {
             String role = claims.get("role", String.class);
             if (path.startsWith("/api/v1/admin")) {
                 if ("admin".equals(role)) {
+                    // Only the most recent administrator sign-in may use the admin API.
+                    if (!adminSessionService.isCurrent(userId, claims.getId())) {
+                        throw new ApiException(401,
+                                "This admin session was replaced by a newer sign-in");
+                    }
                     request.setAttribute(ATTR_USER_ID, userId);
                     request.setAttribute(ATTR_ROLE, role);
                     return true;

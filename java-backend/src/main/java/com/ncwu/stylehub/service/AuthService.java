@@ -24,10 +24,13 @@ public class AuthService {
 
     private final JwtService jwtService;
     private final MailService mailService;
+    private final AdminSessionService adminSessionService;
 
-    public AuthService(JwtService jwtService, MailService mailService) {
+    public AuthService(JwtService jwtService, MailService mailService,
+            AdminSessionService adminSessionService) {
         this.jwtService = jwtService;
         this.mailService = mailService;
+        this.adminSessionService = adminSessionService;
     }
 
     @Transactional
@@ -77,6 +80,11 @@ public class AuthService {
     }
 
     private Token tokenFor(User user) {
-        return new Token(jwtService.create(user.id, user.role), "bearer", toUserOut(user));
+        String token = jwtService.create(user.id, user.role);
+        if ("admin".equals(user.role)) {
+            // A fresh admin sign-in replaces whoever was signed in before.
+            adminSessionService.activate(user.id, jwtService.jti(token));
+        }
+        return new Token(token, "bearer", toUserOut(user));
     }
 }

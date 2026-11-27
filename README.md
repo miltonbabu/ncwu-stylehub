@@ -83,7 +83,7 @@ The project is intentionally small enough to run on one 2 GB EC2 instance while 
 
 ### Platform behaviour
 
-- JWT bearer authentication with HS256 signing, PBKDF2-HMAC-SHA256 password hashing, and customer, admin, and read-only demo-admin roles.
+- JWT bearer authentication with HS256 signing, PBKDF2-HMAC-SHA256 password hashing, and customer and admin roles. Only one admin session is valid at a time — a new admin sign-in replaces the previous one.
 - Per-IP sliding-window rate limits: 10 requests per minute for login and registration, 20 per minute for image uploads, 300 per minute for the rest of the API.
 - Database-backed health endpoint at `/health`.
 - H2 file database fallback so local development needs no database server.
@@ -329,11 +329,9 @@ The sign-in page includes **Quick demo access** buttons that fill these credenti
 | Role | Email | Password | Access |
 | --- | --- | --- | --- |
 | Customer | `user@shop.ncwu.site` | `demo@123` | Storefront, cart, checkout, orders, wishlist, reviews |
-| Demo admin | `demo-admin@shop.ncwu.site` | `demo-admin@123` | Read-only dashboard, products, reviews, appearance |
-| Full admin, Supabase seed only | `admin@shop.ncwu.site` | `admin@123` | Full back office; change this password immediately |
-| Full admin, local H2 | none by default | none | Promote a registered account, see below |
+| Admin | `admin@shop.ncwu.site` | `t00` | Full back office. Only one admin session can be active at a time; a new sign-in replaces the old one |
 
-> **Important:** the backend does not create a full administrator in the local H2 database. This is intentional. The demo admin is read-only. To manage products, users, orders, and refunds locally, promote your own account using the steps in [Create a full administrator](#create-a-full-administrator).
+> **Important:** the backend creates the `admin@shop.ncwu.site` administrator on every startup, so these credentials always work. Override them with `ADMIN_EMAIL` and `ADMIN_PASSWORD`. The read-only demo administrator has been removed.
 
 ### 5. Smoke test
 
@@ -427,9 +425,8 @@ Do not put database passwords, JWT secrets, Cloudinary API secrets, Resend API k
 | `CORS_ORIGINS` | Production | `http://localhost:3000,http://127.0.0.1:3000` | Exact allowed frontend origins, comma separated, no spaces, no trailing slash. Read from the OS environment. |
 | `SERVER_PORT` | No | `8080` | API listen port. |
 | `APP_DEMO_ENABLED` | No | `true` | Seeds demo catalog and demo customer. Set `false` in production. |
-| `APP_DEMO_ADMIN_ENABLED` | No | `true` | Creates the read-only demo admin. Set `false` in production. |
-| `DEMO_ADMIN_EMAIL` | No | `demo-admin@shop.ncwu.site` | Demo admin email, only used when demo admin is enabled. |
-| `DEMO_ADMIN_PASSWORD` | No | `demo-admin@123` | Demo admin password, only used when demo admin is enabled. |
+| `ADMIN_EMAIL` | No | `admin@shop.ncwu.site` | Administrator login ensured on every startup. |
+| `ADMIN_PASSWORD` | No | `t00` | Administrator password, re-applied on every startup. |
 | `CLOUDINARY_CLOUD_NAME` | No | empty | Cloudinary cloud name. |
 | `CLOUDINARY_API_KEY` | No | empty | Cloudinary API key. |
 | `CLOUDINARY_API_SECRET` | No | empty | Cloudinary API secret. Backend only. |

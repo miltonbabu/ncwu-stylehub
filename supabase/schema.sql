@@ -123,6 +123,21 @@ CREATE TABLE IF NOT EXISTS addresses (
 
 CREATE INDEX IF NOT EXISTS idx_addresses_user ON addresses(user_id);
 
+-- Single row holding the one administrator session allowed in at a time.
+CREATE TABLE IF NOT EXISTS admin_session (
+    id        INTEGER     PRIMARY KEY,
+    user_id   INTEGER     NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    jti       VARCHAR(64) NOT NULL,
+    issued_at TIMESTAMP   NOT NULL DEFAULT NOW()
+);
+
+-- Single row capping how much the test administrator may delete.
+CREATE TABLE IF NOT EXISTS admin_delete_quota (
+    id               INTEGER PRIMARY KEY,
+    products_deleted INTEGER NOT NULL DEFAULT 0,
+    orders_deleted   INTEGER NOT NULL DEFAULT 0
+);
+
 CREATE TABLE IF NOT EXISTS refund_requests (
     id            SERIAL PRIMARY KEY,
     order_id      INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,

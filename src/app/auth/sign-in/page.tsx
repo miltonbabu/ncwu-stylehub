@@ -116,14 +116,14 @@ function SignInContent() {
             <button
               type="button"
               onClick={() => {
-                setEmail("demo-admin@shop.ncwu.site");
-                setPassword("demo-admin@123");
+                setEmail("admin@shop.ncwu.site");
+                setPassword("t00");
                 setError("");
               }}
               className="cursor-pointer rounded-xl border border-white/70 bg-white px-3 py-2.5 text-left text-xs font-semibold text-brand-text shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary hover:text-primary"
             >
-              <span className="block text-sm">Demo admin</span>
-              <span className="mt-0.5 block text-[11px] font-normal text-gray-500">Explore read-only admin</span>
+              <span className="block text-sm">Admin</span>
+              <span className="mt-0.5 block text-[11px] font-normal text-gray-500">Manage the store, one admin at a time</span>
             </button>
           </div>
         </div>
