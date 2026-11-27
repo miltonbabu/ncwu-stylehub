@@ -112,6 +112,9 @@ export interface Order {
   tracking_number: string | null;
   /** Email typed at guest checkout; empty for signed-in orders. */
   guest_email?: string;
+  /** Account name and email; empty for guest orders. */
+  customer_name?: string;
+  customer_email?: string;
   /** Last status / tracking change (ISO string). Falls back to created_at on older orders. */
   updated_at?: string | null;
 }

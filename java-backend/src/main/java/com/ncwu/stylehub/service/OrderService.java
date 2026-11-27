@@ -360,6 +360,8 @@ public class OrderService {
                 order.total, order.shippingName,
                 order.shippingAddress, order.shippingPhone, order.paymentMethod, order.createdAt, items,
                 shipping, order.guestEmail != null ? order.guestEmail : "",
+                order.user != null ? order.user.name : "",
+                contactEmail(order),
                 order.updatedAt != null ? order.updatedAt : order.createdAt);
     }
 }

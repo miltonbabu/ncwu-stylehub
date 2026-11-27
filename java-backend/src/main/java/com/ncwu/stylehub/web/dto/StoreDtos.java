@@ -143,6 +143,8 @@ public final class StoreDtos {
                            LocalDateTime createdAt, List<OrderItemOut> items, double shipping,
                            /** Email used at checkout; empty for signed-in orders. */
                            String guestEmail,
+                           /** Account name and email, so the back office can tell account orders from guest ones. */
+                           String customerName, String customerEmail,
                            /** Last status / tracking change, so customers can see the latest update time. */
                            LocalDateTime updatedAt) {
     }

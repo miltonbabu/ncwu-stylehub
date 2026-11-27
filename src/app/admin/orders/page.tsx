@@ -4,8 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { api, updateAdminOrder } from "@/lib/api";
 import type { Order } from "@/lib/types";
 import { formatDate, formatPrice, paymentLabel } from "@/lib/utils";
-import { Search, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { ChevronDown, Mail, MapPin, Phone, Search, Trash2 } from "lucide-react";
+import { Fragment, useEffect, useState } from "react";
 
 const STATUS_TONES: Record<string, "gold" | "primary" | "accent" | "green" | "red" | "gray"> = {
   pending: "gold",
@@ -23,6 +23,7 @@ export default function AdminOrdersPage() {
   const [query, setQuery] = useState("");
   const [busyId, setBusyId] = useState<number | null>(null);
   const [trackingDraft, setTrackingDraft] = useState<Record<number, string>>({});
+  const [expanded, setExpanded] = useState<number | null>(null);
 
   useEffect(() => {
     api<Order[]>("/admin/orders")
@@ -66,11 +67,18 @@ export default function AdminOrdersPage() {
     }
   };
 
-  const filtered = orders.filter(
-    (o) =>
-      String(o.id).includes(query) ||
-      o.shipping_name.toLowerCase().includes(query.toLowerCase()),
-  );
+  const filtered = orders.filter((o) => {
+    const q = query.toLowerCase().trim();
+    if (!q) return true;
+    return (
+      String(o.id).includes(q) ||
+      o.shipping_name.toLowerCase().includes(q) ||
+      (o.customer_email ?? "").toLowerCase().includes(q) ||
+      (o.guest_email ?? "").toLowerCase().includes(q) ||
+      (o.shipping_phone ?? "").includes(q) ||
+      o.shipping_address.toLowerCase().includes(q)
+    );
+  });
 
   return (
     <div>
@@ -122,21 +130,52 @@ export default function AdminOrdersPage() {
             ) : (
               filtered.map((order) => {
                 const draft = trackingDraft[order.id] ?? order.tracking_number ?? "";
+                const email = order.customer_email || order.guest_email || "";
+                const isGuest = order.user_id === null;
+                const open = expanded === order.id;
+                const subtotal = order.total - order.shipping;
                 return (
-                  <tr key={order.id} className="transition-colors hover:bg-gray-50/60">
-                    <td className="px-5 py-3">
-                      <p className="font-semibold text-brand-text">#{order.id}</p>
+                  <Fragment key={order.id}>
+                  <tr className="transition-colors hover:bg-gray-50/60">
+                    <td className="px-5 py-3 align-top">
+                      <button
+                        type="button"
+                        onClick={() => setExpanded(open ? null : order.id)}
+                        className="inline-flex cursor-pointer items-center gap-1 font-semibold text-brand-text hover:text-primary"
+                        aria-expanded={open}
+                      >
+                        #{order.id}
+                        <ChevronDown className={open ? "h-3.5 w-3.5 rotate-180 transition-transform" : "h-3.5 w-3.5 transition-transform"} />
+                      </button>
                       <p className="text-xs text-gray-400">{formatDate(order.created_at)}</p>
                     </td>
-                    <td className="px-5 py-3">
-                      <p className="font-medium text-brand-text">{order.shipping_name}</p>
-                      <p className="line-clamp-1 max-w-48 text-xs text-gray-400">{order.shipping_address}</p>
+                    <td className="px-5 py-3 align-top">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <p className="font-medium text-brand-text">{order.shipping_name}</p>
+                        {isGuest && (
+                          <span className="rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700">
+                            Guest
+                          </span>
+                        )}
+                      </div>
+                      <p className="max-w-52 break-all text-xs text-gray-500">{email || "no email"}</p>
+                      {order.shipping_phone && (
+                        <p className="text-xs text-gray-400">{order.shipping_phone}</p>
+                      )}
+                      <p className="mt-1 max-w-56 whitespace-normal break-words text-xs leading-snug text-gray-400">
+                        {order.shipping_address}
+                      </p>
                     </td>
-                    <td className="px-5 py-3 text-gray-600">
+                    <td className="px-5 py-3 align-top text-gray-600">
                       <ul className="space-y-1">
                         {order.items.map((item) => (
                           <li key={item.id} className="text-xs whitespace-nowrap">
                             <span className="font-medium text-brand-text">{item.product_name}</span>
+                            {item.style ? (
+                              <span className="ml-1.5 rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-600">
+                                {item.style}
+                              </span>
+                            ) : null}
                             {item.size ? (
                               <span className="ml-1.5 rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-600">
                                 Size {item.size}
@@ -190,7 +229,7 @@ export default function AdminOrdersPage() {
                         </button>
                       </div>
                     </td>
-                    <td className="px-5 py-3">
+                    <td className="px-5 py-3 align-top">
                       <button
                         type="button"
                         disabled={busyId === order.id}
@@ -202,6 +241,122 @@ export default function AdminOrdersPage() {
                       </button>
                     </td>
                   </tr>
+
+                  {open && (
+                    <tr className="bg-gray-50/70">
+                      <td colSpan={8} className="px-5 py-5">
+                        <div className="grid gap-5 lg:grid-cols-3">
+                          <div>
+                            <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400">
+                              Delivery address
+                            </p>
+                            <p className="mt-2 text-sm font-semibold text-brand-text">{order.shipping_name}</p>
+                            <p className="mt-1 flex items-start gap-1.5 text-sm leading-relaxed text-gray-600">
+                              <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-gray-400" aria-hidden />
+                              <span className="whitespace-pre-wrap break-words">{order.shipping_address}</span>
+                            </p>
+                            {order.shipping_phone && (
+                              <p className="mt-1 flex items-center gap-1.5 text-sm text-gray-600">
+                                <Phone className="h-3.5 w-3.5 text-gray-400" aria-hidden />
+                                {order.shipping_phone}
+                              </p>
+                            )}
+                            <p className="mt-1 flex items-center gap-1.5 text-sm text-gray-600">
+                              <Mail className="h-3.5 w-3.5 text-gray-400" aria-hidden />
+                              <span className="break-all">{email || "no email on file"}</span>
+                            </p>
+                            <p className="mt-2 text-xs text-gray-400">
+                              {isGuest ? "Guest checkout — no account" : `Account: ${order.customer_name || "customer"}`}
+                            </p>
+                          </div>
+
+                          <div>
+                            <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400">
+                              Payment
+                            </p>
+                            <dl className="mt-2 space-y-1.5 text-sm">
+                              <div className="flex justify-between gap-3">
+                                <dt className="text-gray-500">Method</dt>
+                                <dd className="font-medium text-brand-text">{paymentLabel(order.payment_method)}</dd>
+                              </div>
+                              <div className="flex justify-between gap-3">
+                                <dt className="text-gray-500">Subtotal</dt>
+                                <dd className="text-brand-text">{formatPrice(subtotal)}</dd>
+                              </div>
+                              <div className="flex justify-between gap-3">
+                                <dt className="text-gray-500">Shipping</dt>
+                                <dd className="text-brand-text">
+                                  {order.shipping === 0 ? "Free" : formatPrice(order.shipping)}
+                                </dd>
+                              </div>
+                              <div className="flex justify-between gap-3 border-t border-gray-200 pt-1.5">
+                                <dt className="font-semibold text-brand-text">Total</dt>
+                                <dd className="font-bold text-brand-text">{formatPrice(order.total)}</dd>
+                              </div>
+                            </dl>
+                          </div>
+
+                          <div>
+                            <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400">
+                              Fulfilment
+                            </p>
+                            <dl className="mt-2 space-y-1.5 text-sm">
+                              <div className="flex justify-between gap-3">
+                                <dt className="text-gray-500">Status</dt>
+                                <dd><Badge tone={STATUS_TONES[order.status] ?? "gray"}>{order.status}</Badge></dd>
+                              </div>
+                              <div className="flex justify-between gap-3">
+                                <dt className="text-gray-500">Tracking</dt>
+                                <dd className="font-mono text-xs font-semibold text-brand-text">
+                                  {order.tracking_number || "pending"}
+                                </dd>
+                              </div>
+                              <div className="flex justify-between gap-3">
+                                <dt className="text-gray-500">Placed</dt>
+                                <dd className="text-xs text-brand-text">{formatDate(order.created_at)}</dd>
+                              </div>
+                              {order.updated_at && (
+                                <div className="flex justify-between gap-3">
+                                  <dt className="text-gray-500">Updated</dt>
+                                  <dd className="text-xs text-brand-text">{formatDate(order.updated_at)}</dd>
+                                </div>
+                              )}
+                            </dl>
+                          </div>
+                        </div>
+
+                        <div className="mt-5 overflow-x-auto rounded-xl border border-gray-200 bg-white">
+                          <table className="w-full text-left text-xs">
+                            <thead>
+                              <tr className="border-b border-gray-100 text-[10px] uppercase tracking-wide text-gray-400">
+                                <th className="px-3 py-2">Item</th>
+                                <th className="px-3 py-2">Style</th>
+                                <th className="px-3 py-2">Size</th>
+                                <th className="px-3 py-2">Qty</th>
+                                <th className="px-3 py-2">Unit price</th>
+                                <th className="px-3 py-2 text-right">Line total</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-50">
+                              {order.items.map((item) => (
+                                <tr key={item.id}>
+                                  <td className="px-3 py-2 font-medium text-brand-text">{item.product_name}</td>
+                                  <td className="px-3 py-2 text-gray-600">{item.style || "—"}</td>
+                                  <td className="px-3 py-2 text-gray-600">{item.size || "—"}</td>
+                                  <td className="px-3 py-2 text-gray-600">{item.quantity}</td>
+                                  <td className="px-3 py-2 text-gray-600">{formatPrice(item.unit_price)}</td>
+                                  <td className="px-3 py-2 text-right font-semibold text-brand-text">
+                                    {formatPrice(item.unit_price * item.quantity)}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  </Fragment>
                 );
               })
             )}
@@ -216,6 +371,8 @@ export default function AdminOrdersPage() {
           <div className="rounded-xl border border-gray-100 bg-white px-4 py-10 text-center text-sm text-gray-500">No orders found.</div>
         ) : filtered.map((order) => {
           const draft = trackingDraft[order.id] ?? order.tracking_number ?? "";
+          const email = order.customer_email || order.guest_email || "";
+          const isGuest = order.user_id === null;
           return (
             <article key={order.id} className="rounded-xl border border-gray-100 bg-white p-3 shadow-sm">
               <div className="flex items-start justify-between gap-3">
@@ -226,15 +383,42 @@ export default function AdminOrdersPage() {
                 <p className="shrink-0 text-sm font-bold text-brand-text">{formatPrice(order.total)}</p>
               </div>
               <div className="mt-3 border-t border-gray-100 pt-3">
-                <p className="text-sm font-semibold text-brand-text">{order.shipping_name}</p>
-                <p className="mt-0.5 break-words text-xs text-gray-500">{order.shipping_address}</p>
+                <p className="flex flex-wrap items-center gap-1.5 text-sm font-semibold text-brand-text">
+                  {order.shipping_name}
+                  {isGuest && (
+                    <span className="rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700">
+                      Guest
+                    </span>
+                  )}
+                </p>
+                <p className="mt-0.5 break-all text-xs text-gray-500">{email || "no email"}</p>
+                {order.shipping_phone && <p className="text-xs text-gray-500">{order.shipping_phone}</p>}
+                <p className="mt-1 break-words text-xs text-gray-500">{order.shipping_address}</p>
                 <ul className="mt-2 space-y-1">
                   {order.items.map((item) => (
                     <li key={item.id} className="text-xs text-gray-600">
-                      {item.product_name}{item.size ? ` · ${item.size}` : ""} · {item.quantity} × {formatPrice(item.unit_price)}
+                      {item.product_name}
+                      {item.style ? ` · ${item.style}` : ""}
+                      {item.size ? ` · ${item.size}` : ""} · {item.quantity} × {formatPrice(item.unit_price)}
                     </li>
                   ))}
                 </ul>
+                <dl className="mt-2 space-y-1 border-t border-gray-100 pt-2 text-xs">
+                  <div className="flex justify-between">
+                    <dt className="text-gray-500">Subtotal</dt>
+                    <dd className="text-brand-text">{formatPrice(order.total - order.shipping)}</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-gray-500">Shipping</dt>
+                    <dd className="text-brand-text">
+                      {order.shipping === 0 ? "Free" : formatPrice(order.shipping)}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between font-semibold">
+                    <dt className="text-brand-text">Total</dt>
+                    <dd className="text-brand-text">{formatPrice(order.total)}</dd>
+                  </div>
+                </dl>
               </div>
               <div className="mt-3 grid grid-cols-1 gap-2 border-t border-gray-100 pt-3 sm:grid-cols-2">
                 <label className="text-xs font-medium text-gray-500">

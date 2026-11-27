@@ -72,7 +72,7 @@ The project is intentionally small enough to run on one 2 GB EC2 instance while 
 | --- | --- |
 | Dashboard | Revenue, gross profit, order count, average order value, 7, 30, or 90 day range, sales and profit chart, top products, order status breakdown, low-stock and pending-review counts |
 | Products | Create, edit, delete, feature, hide, stock management, style and size variants, image upload by file |
-| Orders | Search by order number or customer, update status, set tracking number, permanently delete an order |
+| Orders | Search by order number, customer name, email, phone or address; expandable row with the full delivery address, customer email, subtotal, shipping, total, tracking and per-item style/size/price; update status, set tracking number, permanently delete an order |
 | Refunds | Review customer requests, approve or reject with an optional note, email the decision when email is configured |
 | Reviews | Approve, reject, or delete submitted reviews |
 | Users | Create customers or administrators, change roles, enable or disable accounts, delete accounts |
