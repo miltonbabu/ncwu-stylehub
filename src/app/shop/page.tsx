@@ -16,32 +16,48 @@ const SORTS = [
   { value: "rating", label: "Top Rated" },
 ];
 
+/** Size options offered by the catalog (apparel letters plus jeans and shoe numbers). */
+const SIZE_FILTERS = ["S", "M", "L", "XL", "28", "30", "32", "34", "38", "39", "40", "41", "42"];
+
 function ShopContent() {
   const router = useRouter();
   const params = useSearchParams();
   const categorySlug = params.get("category") ?? "";
   const search = params.get("search") ?? "";
   const sort = params.get("sort") ?? "newest";
+  const sizeFilter = params.get("size") ?? "";
+  const minPrice = params.get("min") ?? "";
+  const maxPrice = params.get("max") ?? "";
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState(search);
+  const [priceMin, setPriceMin] = useState(minPrice);
+  const [priceMax, setPriceMax] = useState(maxPrice);
 
   useEffect(() => {
     api<Category[]>("/categories").then(setCategories).catch(() => setCategories([]));
   }, []);
 
   useEffect(() => {
+    setPriceMin(minPrice);
+    setPriceMax(maxPrice);
+  }, [minPrice, maxPrice]);
+
+  useEffect(() => {
     setLoading(true);
     const qs = new URLSearchParams({ page_size: "48", sort });
     if (categorySlug) qs.set("category", categorySlug);
     if (search) qs.set("search", search);
+    if (sizeFilter) qs.set("size", sizeFilter);
+    if (minPrice) qs.set("min_price", minPrice);
+    if (maxPrice) qs.set("max_price", maxPrice);
     api<Product[]>(`/products?${qs}`)
       .then(setProducts)
       .catch(() => setProducts([]))
       .finally(() => setLoading(false));
-  }, [categorySlug, search, sort]);
+  }, [categorySlug, search, sort, sizeFilter, minPrice, maxPrice]);
 
   const setParam = (key: string, value: string) => {
     const next = new URLSearchParams(params.toString());
@@ -49,6 +65,28 @@ function ShopContent() {
     else next.delete(key);
     router.push(`/shop?${next.toString()}`);
   };
+
+  const setParamBatch = (updates: Record<string, string>) => {
+    const next = new URLSearchParams(params.toString());
+    for (const [key, value] of Object.entries(updates)) {
+      if (value) next.set(key, value);
+      else next.delete(key);
+    }
+    router.push(`/shop?${next.toString()}`);
+  };
+
+  const applyPrice = (e: React.FormEvent) => {
+    e.preventDefault();
+    const min = priceMin.trim();
+    const max = priceMax.trim();
+    if (min && max && Number(min) > Number(max)) {
+      setParamBatch({ min: max, max: min });
+      return;
+    }
+    setParamBatch({ min, max });
+  };
+
+  const hasFilters = !!(categorySlug || search || sizeFilter || minPrice || maxPrice);
 
   const activeCategory = categories.find((c) => c.slug === categorySlug);
 
@@ -136,6 +174,61 @@ function ShopContent() {
         </div>
       </div>
 
+      <div className="mb-8 flex flex-col gap-4 rounded-2xl border border-gray-100 bg-white/70 p-4 lg:flex-row lg:items-center lg:justify-between">
+        <form onSubmit={applyPrice} className="flex flex-wrap items-center gap-2">
+          <span className="text-sm font-semibold text-brand-text">Price</span>
+          <input
+            value={priceMin}
+            onChange={(e) => setPriceMin(e.target.value.replace(/[^\d.]/g, ""))}
+            inputMode="decimal"
+            placeholder="Min"
+            aria-label="Minimum price"
+            className="h-9 w-20 rounded-lg border border-gray-200 px-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+          />
+          <span className="text-gray-400">–</span>
+          <input
+            value={priceMax}
+            onChange={(e) => setPriceMax(e.target.value.replace(/[^\d.]/g, ""))}
+            inputMode="decimal"
+            placeholder="Max"
+            aria-label="Maximum price"
+            className="h-9 w-20 rounded-lg border border-gray-200 px-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+          />
+          <Button type="submit" size="sm" variant="outline" className="h-9">
+            Apply
+          </Button>
+          {(minPrice || maxPrice) && (
+            <button
+              type="button"
+              onClick={() => setParamBatch({ min: "", max: "" })}
+              className="text-xs font-medium text-gray-500 underline-offset-2 hover:text-primary hover:underline"
+            >
+              Reset
+            </button>
+          )}
+        </form>
+
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="mr-1 text-sm font-semibold text-brand-text">Size</span>
+          {SIZE_FILTERS.map((size) => (
+            <button
+              key={size}
+              type="button"
+              onClick={() => setParam("size", sizeFilter === size ? "" : size)}
+              aria-pressed={sizeFilter === size}
+              className={cn(
+                "min-w-9 cursor-pointer rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-all duration-200 active:scale-95",
+                sizeFilter === size
+                  ? "border-primary bg-primary text-white shadow-sm shadow-primary/25"
+                  : "border-gray-200 bg-white text-gray-600 hover:border-primary/40 hover:text-primary",
+              )}
+            >
+              {size}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {loading ? (
         <div className="stagger-fade grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (
@@ -171,7 +264,11 @@ function ShopContent() {
       ) : (
         <div className="rounded-2xl border border-dashed border-gray-200 bg-white/60 py-20 text-center">
           <p className="font-heading text-lg font-semibold text-brand-text">No products found</p>
-          <p className="mt-1 text-sm text-gray-500">Try a different search or category.</p>
+          <p className="mt-1 text-sm text-gray-500">
+            {hasFilters
+              ? "Try removing a filter or widening the price range."
+              : "Try a different search or category."}
+          </p>
           <Button
             variant="outline"
             className="mt-5"

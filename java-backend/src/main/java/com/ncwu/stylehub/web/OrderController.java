@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -31,10 +32,17 @@ public class OrderController {
         this.orderService = orderService;
     }
 
+    /** Works for signed-in customers and for guests (who supply guest_email instead). */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public OrderOut create(@Valid @RequestBody OrderCreateRequest req, HttpServletRequest request) {
-        return orderService.create(AuthInterceptor.userId(request), req);
+        return orderService.create(AuthInterceptor.optionalUserId(request), req);
+    }
+
+    /** Public order lookup: order id + the email used at checkout. */
+    @GetMapping("/track")
+    public OrderOut track(@RequestParam long orderId, @RequestParam String email) {
+        return orderService.track(orderId, email);
     }
 
     @GetMapping

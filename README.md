@@ -54,12 +54,13 @@ The project is intentionally small enough to run on one 2 GB EC2 instance while 
 | Area | What works |
 | --- | --- |
 | Home page | Auto-playing hero carousel, category showcase, featured products, promotional banners, new arrivals, trust section, club sign-up |
-| Catalog | Search, category filters, sorting by newest, price ascending, price descending, and rating; responsive product grid with loading skeletons and empty states |
-| Product detail | Image gallery, style and size variants, per-variant price and stock, discount badges, quantity selector, wishlist, share action, review list and review form |
+| Catalog | Search, category filters, price-range filter (min/max), size filter, sorting by newest, price ascending, price descending, and rating; responsive product grid with loading skeletons and empty states |
+| Product detail | Image gallery, style and size variants, per-variant price and stock, live stock badge (In stock / Only N left / Sold out), discount badges, quantity selector, wishlist, share action, "You may also like" cross-sell block, review list and review form |
 | Cart | Variant-aware cart stored in `localStorage`, quantity controls capped by available stock, subtotal, free-shipping threshold at ¥80, flat ¥6.90 shipping below the threshold |
-| Checkout | Sign-in required, shipping name, address and phone, Alipay, WeChat Pay, or cash-on-delivery selection, order summary, confirmation screen with tracking code |
+| Checkout | Guest checkout or signed-in checkout, shipping name, address and phone, saved-address picker, Alipay, WeChat Pay, or cash-on-delivery selection, order summary, confirmation screen with tracking code |
 | Orders | Order history, order detail, visual tracking timeline, tracking number, cancellation before shipment, refund request after shipment, refund status |
-| Account | Profile summary, order shortcuts, tracking codes with copy action, saved items, admin panel link for administrators |
+| Guest tracking | Public order lookup by order number plus the email used at checkout, no account required |
+| Account | Profile summary, order shortcuts, address book (add, edit, delete, set default), tracking codes with copy action, saved items, admin panel link for administrators |
 | Authentication | Registration, sign-in, sign-out, forgot password, reset password, 60-minute single-use reset links |
 | Wishlist | Saved products backed by the API, not only browser storage |
 | Support pages | Contact form, FAQ, shipping and returns, privacy, terms |
@@ -182,7 +183,7 @@ sequenceDiagram
   C->>W: Add a variant to the cart
   Note over W: Cart is stored in localStorage
   C->>W: Submit checkout
-  W->>N: POST /api/v1/orders with Bearer JWT
+  W->>N: POST /api/v1/orders (Bearer JWT or guest_email)
   N->>A: Reverse proxy to port 8080
   A->>D: Lock product and variant rows
   A->>D: Validate stock, decrement, insert order
@@ -192,7 +193,7 @@ sequenceDiagram
   W-->>C: Confirmation screen
 ```
 
-Order totals, stock changes, and shipping are calculated on the server. The browser cart is a convenience layer; it is not trusted for prices or stock.
+Order totals, stock changes, and shipping are calculated on the server. The browser cart is a convenience layer; it is not trusted for prices or stock. Checkout accepts a JWT for signed-in customers or a `guest_email` for guests; guests can later look up the order with the order number and that email.
 
 ---
 
@@ -507,6 +508,8 @@ Back up the database first, then apply the migrations in order:
 | 3 | `20261115-sizes-wishlist-tracking.sql` | Product sizes, cart and order size, tracking numbers, wishlists |
 | 4 | `20261116-contact-messages.sql` | Contact inbox |
 | 5 | `20261121-product-variants-refunds.sql` | Product variants, variant inventory, refund requests, backfill for existing sized products |
+| 6 | `20261125-more-products.sql` | Twelve additional catalog products across every category, matched by slug so it is safe to re-run |
+| 7 | `20261128-address-book-guest-checkout.sql` | Address book table, `orders.guest_email`, nullable `orders.user_id` for guest checkout |
 
 Do not rerun `seed.sql` on a live database. It inserts fixed IDs and demo users, and it will conflict with real data.
 
@@ -517,6 +520,7 @@ Hibernate runs with `ddl-auto=update`, so it can also add missing columns. Treat
 ```mermaid
 erDiagram
   USERS ||--o{ ORDERS : places
+  USERS ||--o{ ADDRESSES : saves
   USERS ||--o{ REVIEWS : writes
   USERS ||--o{ WISHLISTS : saves
   USERS ||--o{ CART_ITEMS : owns
@@ -545,7 +549,8 @@ erDiagram
 | `reviews` | Ratings and comments with pending, approved, or rejected status |
 | `cart_items` | Server-side cart model; the current storefront cart is browser-local |
 | `wishlists` | Saved products per user |
-| `orders` | Order header, status, total, shipping details, payment method, tracking number, timestamps |
+| `addresses` | Saved shipping addresses per user, with a single default per customer |
+| `orders` | Order header, status, total, shipping details, payment method, tracking number, timestamps, guest email for account-less orders |
 | `order_items` | Purchased lines with saved name, price, cost, style, size, and variant reference |
 | `refund_requests` | Refund quantity, reason, status, admin note, request and resolution timestamps |
 | `banners` | Homepage hero slides |
@@ -625,9 +630,13 @@ There is currently no frontend unit test suite and no end-to-end test suite. `np
 ### Manual QA checklist
 
 - [ ] Sign up, sign in, sign out, and reset a password with email configured.
-- [ ] Search and filter the catalog, then open a product with multiple styles and sizes.
+- [ ] Search and filter the catalog by category, price range, and size, then open a product with multiple styles and sizes.
+- [ ] Confirm the stock badge shows "In stock", "Only N left" for five or fewer, and "Sold out" at zero.
+- [ ] Confirm the product page shows a "You may also like" block.
 - [ ] Add a variant to the cart, change quantity, remove it, and add it again.
 - [ ] Check out below and above the ¥80 free-shipping threshold.
+- [ ] Check out as a guest without signing in, then look the order up on `/track` with the order number and email.
+- [ ] Save an address in the account address book, then pick it at checkout and confirm the fields fill in.
 - [ ] Cancel a pending order and confirm stock is restored.
 - [ ] As an admin, set an order to shipped, add a tracking number, and confirm the customer timeline.
 - [ ] Request a refund as the customer, approve it as the admin, and confirm both emails.
@@ -925,8 +934,11 @@ Application routes use the `/api/v1` prefix. `/health` and `/uploads/**` are ser
 | `POST` | `/api/v1/auth/forgot-password` | Request a reset link; never reveals whether the email exists |
 | `POST` | `/api/v1/auth/reset-password` | Consume a reset token and set a new password |
 | `GET` | `/api/v1/categories` | List categories |
-| `GET` | `/api/v1/products` | List products with search, category, featured, sort, page, and page_size |
+| `GET` | `/api/v1/products` | List products with search, category, featured, `min_price`, `max_price`, `size`, sort, page, and page_size |
 | `GET` | `/api/v1/products/{id}` | Product detail with variants and images |
+| `GET` | `/api/v1/products/{id}/related` | Cross-sell products: same category first, then featured items |
+| `POST` | `/api/v1/orders` | Place an order (guest checkout allowed with `guest_email`) |
+| `GET` | `/api/v1/orders/track` | Public order lookup by order number and checkout email |
 | `GET` | `/api/v1/banners` | Homepage banners |
 | `GET` | `/api/v1/promotions` | Homepage promotions |
 | `GET` | `/api/v1/reviews/product/{productId}` | Approved reviews for a product |
@@ -947,10 +959,14 @@ Application routes use the `/api/v1` prefix. `/health` and `/uploads/**` are ser
 | `GET` | `/api/v1/wishlist` | Saved products |
 | `POST` | `/api/v1/wishlist/{productId}` | Save a product |
 | `DELETE` | `/api/v1/wishlist/{productId}` | Remove a saved product |
-| `POST` | `/api/v1/orders` | Place an order |
+| `POST` | `/api/v1/orders` | Place an order (works with or without a token) |
 | `GET` | `/api/v1/orders` | List my orders |
 | `GET` | `/api/v1/orders/{orderId}` | Order detail |
 | `POST` | `/api/v1/orders/{orderId}/cancel` | Cancel an unshipped order |
+| `GET` | `/api/v1/addresses` | List my saved addresses |
+| `POST` | `/api/v1/addresses` | Add a saved address |
+| `PUT` | `/api/v1/addresses/{addressId}` | Update a saved address |
+| `DELETE` | `/api/v1/addresses/{addressId}` | Delete a saved address |
 | `GET` | `/api/v1/orders/refunds` | My refund requests |
 | `POST` | `/api/v1/orders/refunds` | Request a refund |
 | `POST` | `/api/v1/reviews` | Submit a review for moderation |

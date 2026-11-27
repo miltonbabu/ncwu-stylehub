@@ -65,7 +65,11 @@ export function ProductCard({ product, className }: { product: Product; classNam
         <div className="pointer-events-none absolute left-2 top-2 z-10 flex flex-col items-start gap-1 sm:left-3 sm:top-3">
           {discount > 0 && <Badge tone="accent">-{discount}%</Badge>}
           {product.is_featured && <Badge tone="gold">Featured</Badge>}
-          {product.stock <= 0 && <Badge tone="gray">Sold out</Badge>}
+          {product.stock <= 0 ? (
+            <Badge tone="gray">Sold out</Badge>
+          ) : product.stock <= 5 ? (
+            <Badge tone="red">Only {product.stock} left</Badge>
+          ) : null}
         </div>
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/45 via-black/15 to-transparent opacity-70 transition-opacity duration-300 lg:opacity-0 lg:group-hover:opacity-100" />
         <div className="absolute inset-x-2 bottom-2 z-10 flex translate-y-0 gap-2 opacity-100 transition-all duration-300 sm:inset-x-3 sm:bottom-3 lg:translate-y-3 lg:opacity-0 lg:group-hover:translate-y-0 lg:group-hover:opacity-100">

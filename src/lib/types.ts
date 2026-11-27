@@ -97,7 +97,8 @@ export interface RefundRequest {
 
 export interface Order {
   id: number;
-  user_id: number;
+  /** Null for guest checkout (no account involved). */
+  user_id: number | null;
   status: "pending" | "paid" | "shipped" | "completed" | "cancelled";
   total: number;
   shipping_name: string;
@@ -109,8 +110,20 @@ export interface Order {
   /** Shipping fee included in `total` (0 when free). */
   shipping: number;
   tracking_number: string | null;
+  /** Email typed at guest checkout; empty for signed-in orders. */
+  guest_email?: string;
   /** Last status / tracking change (ISO string). Falls back to created_at on older orders. */
   updated_at?: string | null;
+}
+
+/** Saved shipping address in the customer's address book. */
+export interface Address {
+  id: number;
+  label: string;
+  full_name: string;
+  phone: string;
+  address: string;
+  is_default: boolean;
 }
 
 export interface Banner {

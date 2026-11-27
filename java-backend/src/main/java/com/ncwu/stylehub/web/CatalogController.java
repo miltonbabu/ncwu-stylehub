@@ -34,16 +34,27 @@ public class CatalogController {
             @RequestParam(required = false) String search,
             @RequestParam(value = "category", required = false) String category,
             @RequestParam(required = false) Boolean featured,
+            @RequestParam(value = "min_price", required = false) Double minPrice,
+            @RequestParam(value = "max_price", required = false) Double maxPrice,
+            @RequestParam(required = false) String size,
             @RequestParam(defaultValue = "newest") String sort,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(value = "page_size", defaultValue = "12") int pageSize) {
-        int size = Math.min(Math.max(pageSize, 1), 48);
-        return catalogService.products(search, category, featured, sort, Math.max(page, 1), size);
+        int size2 = Math.min(Math.max(pageSize, 1), 48);
+        return catalogService.products(search, category, featured, minPrice, maxPrice, size,
+                sort, Math.max(page, 1), size2);
     }
 
     @GetMapping("/products/{id}")
     public ProductOut product(@PathVariable long id) {
         return catalogService.product(id);
+    }
+
+    /** "You may also like" — same category first, then featured items from other categories. */
+    @GetMapping("/products/{id}/related")
+    public List<ProductOut> related(@PathVariable long id,
+                                    @RequestParam(defaultValue = "4") int limit) {
+        return catalogService.related(id, Math.min(Math.max(limit, 1), 8));
     }
 
     @GetMapping("/banners")

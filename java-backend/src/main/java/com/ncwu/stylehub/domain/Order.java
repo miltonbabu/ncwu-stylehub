@@ -25,9 +25,14 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long id;
 
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
+    /** Null for guest checkout — such orders are identified by their guest email instead. */
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "user_id")
     public User user;
+
+    /** Email captured at guest checkout. Empty for orders placed by a signed-in customer. */
+    @Column(name = "guest_email", length = 150)
+    public String guestEmail = "";
 
     @Column(nullable = false, length = 20)
     public String status = "pending";

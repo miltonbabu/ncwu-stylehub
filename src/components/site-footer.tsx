@@ -124,6 +124,7 @@ export function SiteFooter() {
           <h3 className="font-heading text-xs font-semibold uppercase tracking-[0.14em] text-white">Help</h3>
           <ul className="mt-4 space-y-2.5 text-sm text-white/65">
             <li><Link href="/orders" className="cursor-pointer transition-colors hover:text-white">Order Tracking</Link></li>
+            <li><Link href="/track" className="cursor-pointer transition-colors hover:text-white">Track as Guest</Link></li>
             <li><Link href="/account" className="cursor-pointer transition-colors hover:text-white">My Account</Link></li>
             <li><Link href="/wishlist" className="cursor-pointer transition-colors hover:text-white">Saved Items</Link></li>
             <li><Link href="/help/shipping-returns" className="cursor-pointer transition-colors hover:text-white">Shipping &amp; Returns</Link></li>

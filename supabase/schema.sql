@@ -83,7 +83,9 @@ CREATE TABLE IF NOT EXISTS cart_items (
 
 CREATE TABLE IF NOT EXISTS orders (
     id               SERIAL PRIMARY KEY,
-    user_id          INTEGER        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    -- NULL for guest checkout; those orders are identified by guest_email.
+    user_id          INTEGER        REFERENCES users(id) ON DELETE CASCADE,
+    guest_email      VARCHAR(150),
     status           VARCHAR(20)    NOT NULL DEFAULT 'pending',
     total            DOUBLE PRECISION NOT NULL DEFAULT 0,
     shipping_name    VARCHAR(100)   NOT NULL,
@@ -107,6 +109,19 @@ CREATE TABLE IF NOT EXISTS order_items (
     variant_id   INTEGER REFERENCES product_variants(id) ON DELETE SET NULL,
     style        VARCHAR(100) NOT NULL DEFAULT ''
 );
+
+CREATE TABLE IF NOT EXISTS addresses (
+    id         SERIAL PRIMARY KEY,
+    user_id    INTEGER      NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    label      VARCHAR(40)  NOT NULL DEFAULT '',
+    full_name  VARCHAR(100) NOT NULL,
+    phone      VARCHAR(30)  NOT NULL DEFAULT '',
+    address    VARCHAR(300) NOT NULL,
+    is_default BOOLEAN      NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP    NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_addresses_user ON addresses(user_id);
 
 CREATE TABLE IF NOT EXISTS refund_requests (
     id            SERIAL PRIMARY KEY,

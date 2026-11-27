@@ -111,16 +111,38 @@ public final class StoreDtos {
             @NotBlank String shippingAddress,
             String shippingPhone,
             String paymentMethod,
+            /** Required only for guest checkout (no signed-in account). */
+            String guestEmail,
             @NotEmpty List<OrderItemIn> items) {
+    }
+
+    /** Public order lookup: the caller proves ownership with the email used at checkout. */
+    public record OrderTrackRequest(@NotNull Long orderId, @NotBlank String email) {
+    }
+
+    /* ---------- Address book ---------- */
+
+    public record AddressOut(long id, String label, String fullName, String phone, String address,
+                             boolean isDefault) {
+    }
+
+    public record AddressRequest(
+            @jakarta.validation.constraints.Size(max = 40) String label,
+            @NotBlank @jakarta.validation.constraints.Size(max = 100) String fullName,
+            @jakarta.validation.constraints.Size(max = 30) String phone,
+            @NotBlank @jakarta.validation.constraints.Size(max = 300) String address,
+            Boolean isDefault) {
     }
 
     public record OrderItemOut(Long id, Long productId, String productName, double unitPrice,
                                int quantity, String style, String size, String productImage) {
     }
 
-    public record OrderOut(long id, long userId, String status, String trackingNumber, double total,
+    public record OrderOut(long id, Long userId, String status, String trackingNumber, double total,
                            String shippingName, String shippingAddress, String shippingPhone, String paymentMethod,
                            LocalDateTime createdAt, List<OrderItemOut> items, double shipping,
+                           /** Email used at checkout; empty for signed-in orders. */
+                           String guestEmail,
                            /** Last status / tracking change, so customers can see the latest update time. */
                            LocalDateTime updatedAt) {
     }

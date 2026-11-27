@@ -35,6 +35,13 @@ public class AuthInterceptor implements HandlerInterceptor {
             return true;
         }
 
+        if (isOptionalAuth(method, path)) {
+            // Guest checkout: a signed-in customer still gets their user id attached,
+            // while an anonymous visitor proceeds without one.
+            attachIfPresent(request);
+            return true;
+        }
+
         String header = request.getHeader("Authorization");
         if (header == null || !header.startsWith("Bearer ")) {
             throw new ApiException(401, "Could not validate credentials");
@@ -61,6 +68,28 @@ public class AuthInterceptor implements HandlerInterceptor {
         } catch (Exception e) {
             throw new ApiException(401, "Could not validate credentials");
         }
+    }
+
+    private void attachIfPresent(HttpServletRequest request) {
+        String header = request.getHeader("Authorization");
+        if (header == null || !header.startsWith("Bearer ")) {
+            return;
+        }
+        try {
+            Claims claims = jwtService.parse(header.substring(7));
+            request.setAttribute(ATTR_USER_ID, Long.parseLong(claims.getSubject()));
+            request.setAttribute(ATTR_ROLE, claims.get("role", String.class));
+        } catch (Exception ignored) {
+            // An expired token must not block a guest checkout.
+        }
+    }
+
+    /** Endpoints that work with or without a token (guest checkout and order tracking). */
+    private boolean isOptionalAuth(String method, String path) {
+        if ("POST".equals(method) && path.equals("/api/v1/orders")) {
+            return true;
+        }
+        return "GET".equals(method) && path.equals("/api/v1/orders/track");
     }
 
     private boolean isDemoAdminRead(String method, String path, String role) {
@@ -100,5 +129,11 @@ public class AuthInterceptor implements HandlerInterceptor {
             throw new ApiException(401, "Could not validate credentials");
         }
         return (long) value;
+    }
+
+    /** Signed-in user id, or {@code null} for an anonymous guest request. */
+    public static Long optionalUserId(HttpServletRequest request) {
+        Object value = request.getAttribute(ATTR_USER_ID);
+        return value == null ? null : (long) value;
     }
 }

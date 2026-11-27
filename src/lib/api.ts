@@ -1,4 +1,4 @@
-import type { AdminAnalytics, AuthPayload, ContactMessage, Order, Product, Subscriber, User } from "./types";
+import type { AdminAnalytics, Address, AuthPayload, ContactMessage, Order, Product, Subscriber, User } from "./types";
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
@@ -162,6 +162,38 @@ export function deleteContactMessage(id: number): Promise<void> {
 
 export function cancelOrder(id: number): Promise<Order> {
   return api<Order>(`/orders/${id}/cancel`, { method: "POST" });
+}
+
+/** Public lookup used by guest checkouts: order number plus the email used at checkout. */
+export function trackOrder(orderId: number, email: string): Promise<Order> {
+  const qs = new URLSearchParams({ orderId: String(orderId), email });
+  return api<Order>(`/orders/track?${qs}`);
+}
+
+/* ---------- Address book ---------- */
+
+export function fetchAddresses(): Promise<Address[]> {
+  return api<Address[]>("/addresses");
+}
+
+export type AddressInput = Omit<Address, "id">;
+
+export function createAddress(payload: AddressInput): Promise<Address> {
+  return api<Address>("/addresses", { method: "POST", body: JSON.stringify(payload) });
+}
+
+export function updateAddress(id: number, payload: AddressInput): Promise<Address> {
+  return api<Address>(`/addresses/${id}`, { method: "PUT", body: JSON.stringify(payload) });
+}
+
+export function deleteAddress(id: number): Promise<void> {
+  return api<void>(`/addresses/${id}`, { method: "DELETE" });
+}
+
+/* ---------- Catalog extras ---------- */
+
+export function fetchRelatedProducts(productId: number, limit = 4): Promise<Product[]> {
+  return api<Product[]>(`/products/${productId}/related?limit=${limit}`);
 }
 
 /* ---------- Password reset (all handled by the backend) ---------- */

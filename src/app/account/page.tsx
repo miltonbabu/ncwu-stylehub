@@ -2,6 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { AddressBook } from "@/components/address-book";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import type { Order } from "@/lib/types";
@@ -129,6 +130,11 @@ export default function AccountPage() {
             <LogOut className="h-4 w-4" /> Sign Out
           </Button>
         </div>
+      </div>
+
+      {/* Saved addresses */}
+      <div className="mt-6">
+        <AddressBook />
       </div>
 
       {/* Tracking codes */}

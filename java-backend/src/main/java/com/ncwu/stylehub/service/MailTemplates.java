@@ -77,10 +77,22 @@ final class MailTemplates {
         return new Mail(html, text);
     }
 
+    /** Guest orders have no account, so fall back to the name given at checkout. */
+    private static String customerName(Order order) {
+        return order.user != null ? order.user.name : order.shippingName;
+    }
+
+    /** Guests cannot open the account-only order page, so they track by number + email instead. */
+    private String orderLink(Order order) {
+        return order.user != null
+                ? siteUrl + "/orders/" + order.id
+                : siteUrl + "/track?order=" + order.id;
+    }
+
     Mail orderConfirmation(Order order) {
-        String view = siteUrl + "/orders/" + order.id;
+        String view = orderLink(order);
         String html = layout("Order confirmed", "Order #" + order.id + " is confirmed",
-                "<p style=\"" + P + "\">Hi " + escape(order.user.name) + ",</p>"
+                "<p style=\"" + P + "\">Hi " + escape(customerName(order)) + ",</p>"
                         + "<p style=\"" + P + "\">Thanks for your order. We have received it and will email you "
                         + "again as soon as it ships.</p>"
                         + orderSummary(order)
@@ -90,7 +102,7 @@ final class MailTemplates {
                         + button("View order details", view)
                         + secondary(siteUrl + "/shop", "or continue shopping"));
         return new Mail(html, plain("Order #" + order.id + " confirmed",
-                "Hi " + order.user.name + ",",
+                "Hi " + customerName(order) + ",",
                 "Thanks for your order. We have received it and will email you again as soon as it ships.",
                 orderText(order),
                 "Total: " + money(order.total),
@@ -98,9 +110,9 @@ final class MailTemplates {
     }
 
     Mail trackingUpdate(Order order) {
-        String view = siteUrl + "/orders/" + order.id;
+        String view = orderLink(order);
         String html = layout("Order update", statusHeading(order),
-                "<p style=\"" + P + "\">Hi " + escape(order.user.name) + ",</p>"
+                "<p style=\"" + P + "\">Hi " + escape(customerName(order)) + ",</p>"
                         + "<p style=\"" + P + "\">" + escape(statusMessage(order.status)) + "</p>"
                         + ("cancelled".equals(order.status) ? "" : timeline(order.status))
                         + orderSummary(order)
@@ -108,7 +120,7 @@ final class MailTemplates {
                         + button("Track your order", view)
                         + secondary(siteUrl + "/shop?sort=newest", "or shop new arrivals"));
         return new Mail(html, plain(statusHeading(order),
-                "Hi " + order.user.name + ",",
+                "Hi " + customerName(order) + ",",
                 statusMessage(order.status),
                 "Order: #" + order.id,
                 "Status: " + order.status,
@@ -134,10 +146,10 @@ final class MailTemplates {
     }
 
     Mail orderCancelled(Order order) {
-        String view = siteUrl + "/orders/" + order.id;
+        String view = orderLink(order);
         String shop = siteUrl + "/shop";
         String html = layout("Order cancelled", "Order #" + order.id + " has been cancelled",
-                "<p style=\"" + P + "\">Hi " + escape(order.user.name) + ",</p>"
+                "<p style=\"" + P + "\">Hi " + escape(customerName(order)) + ",</p>"
                         + "<p style=\"" + P + "\">Your order has been cancelled as requested. Any reserved stock "
                         + "has been released back to the shop.</p>"
                         + orderSummary(order)
@@ -148,7 +160,7 @@ final class MailTemplates {
                         + "payment method. Questions? <a href=\"" + escape(siteUrl + "/help/contact")
                         + "\" style=\"color:" + BRAND + ";text-decoration:underline;\">Contact support</a>."));
         return new Mail(html, plain("Order #" + order.id + " cancelled",
-                "Hi " + order.user.name + ",",
+                "Hi " + customerName(order) + ",",
                 "Your order has been cancelled as requested and any reserved stock has been released.",
                 orderText(order),
                 "Start a new order: " + shop,

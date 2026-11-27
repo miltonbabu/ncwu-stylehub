@@ -52,6 +52,13 @@ public class CatalogService {
     @Transactional(readOnly = true)
     public List<ProductOut> products(String search, String categorySlug, Boolean featured,
                                      String sort, int page, int pageSize) {
+        return products(search, categorySlug, featured, null, null, null, sort, page, pageSize);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProductOut> products(String search, String categorySlug, Boolean featured,
+                                     Double minPrice, Double maxPrice, String size,
+                                     String sort, int page, int pageSize) {
         List<Product> all = new ArrayList<>(em
                 .createQuery("SELECT p FROM Product p WHERE p.isActive = true", Product.class)
                 .getResultList());
@@ -61,6 +68,16 @@ public class CatalogService {
         }
         if (featured != null) {
             all.removeIf(p -> p.isFeatured != featured);
+        }
+        if (minPrice != null) {
+            all.removeIf(p -> p.price < minPrice);
+        }
+        if (maxPrice != null) {
+            all.removeIf(p -> p.price > maxPrice);
+        }
+        if (size != null && !size.isBlank()) {
+            String wanted = size.trim().toLowerCase();
+            all.removeIf(p -> !offersSize(p, wanted));
         }
         if (search != null && !search.isBlank()) {
             String q = search.toLowerCase();
@@ -405,6 +422,60 @@ public class CatalogService {
 
     private static boolean contains(String text, String q) {
         return text != null && text.toLowerCase().contains(q);
+    }
+
+    /** True when the product's size list (or one of its variants) contains the requested size. */
+    private static boolean offersSize(Product product, String wantedLower) {
+        if (product.sizes != null) {
+            for (String option : product.sizes.split(",")) {
+                if (option.trim().toLowerCase().equals(wantedLower)) {
+                    return true;
+                }
+            }
+        }
+        return product.variants.stream()
+                .anyMatch(v -> v.size != null && v.size.trim().toLowerCase().equals(wantedLower));
+    }
+
+    /**
+     * Cross-sell block: other active products from the same category, best-rated first,
+     * topped up with featured items from other categories when the category is small.
+     */
+    @Transactional(readOnly = true)
+    public List<ProductOut> related(long productId, int limit) {
+        Product current = em.find(Product.class, productId);
+        if (current == null) {
+            throw new ApiException(404, "Product not found");
+        }
+        List<Product> all = em.createQuery("SELECT p FROM Product p WHERE p.isActive = true", Product.class)
+                .getResultList();
+        Map<Long, double[]> ratings = ratingSummary(all.stream().map(p -> p.id).toList());
+        Comparator<Product> rank = Comparator
+                .comparingDouble((Product p) -> ratings.getOrDefault(p.id, new double[] {0, 0})[0]).reversed()
+                .thenComparing((Product p) -> p.isFeatured ? 0 : 1)
+                .thenComparing(p -> p.id, Comparator.reverseOrder());
+
+        List<Product> picked = new ArrayList<>();
+        if (current.category != null) {
+            all.stream()
+                    .filter(p -> p.category != null && p.category.id.equals(current.category.id))
+                    .filter(p -> !p.id.equals(current.id))
+                    .sorted(rank)
+                    .limit(limit)
+                    .forEach(picked::add);
+        }
+        if (picked.size() < limit) {
+            all.stream()
+                    .filter(p -> !p.id.equals(current.id))
+                    .filter(p -> picked.stream().noneMatch(x -> x.id.equals(p.id)))
+                    .filter(p -> p.isFeatured)
+                    .sorted(rank)
+                    .limit(limit - picked.size())
+                    .forEach(picked::add);
+        }
+        return picked.stream()
+                .map(p -> toOut(p, ratings.getOrDefault(p.id, new double[] {0, 0})))
+                .toList();
     }
 
     public static String slugify(String text) {

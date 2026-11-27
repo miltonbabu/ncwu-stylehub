@@ -1,10 +1,11 @@
 "use client";
 
 import { ReviewSection } from "@/components/review-section";
+import { ProductCard } from "@/components/product-card";
 import { StarRating } from "@/components/star-rating";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { addWishlist, api, fetchWishlist, removeWishlist } from "@/lib/api";
+import { addWishlist, api, fetchRelatedProducts, fetchWishlist, removeWishlist } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useCart } from "@/lib/cart-context";
 import type { Product } from "@/lib/types";
@@ -29,6 +30,7 @@ export function ProductDetailClient() {
   const [added, setAdded] = useState(false);
   const [saved, setSaved] = useState(false);
   const [savingWish, setSavingWish] = useState(false);
+  const [related, setRelated] = useState<Product[]>([]);
 
   useEffect(() => {
     if (!id) return;
@@ -45,6 +47,9 @@ export function ProductDetailClient() {
       })
       .catch(() => setProduct(null))
       .finally(() => setLoading(false));
+    fetchRelatedProducts(Number(id), 4)
+      .then(setRelated)
+      .catch(() => setRelated([]));
   }, [id]);
 
   useEffect(() => {
@@ -227,9 +232,18 @@ export function ProductDetailClient() {
           <p className="text-sm leading-relaxed text-gray-600 sm:text-base">{product.description}</p>
 
           <div className="flex items-center gap-3">
-            <Badge tone={product.stock > 0 ? "green" : "red"}>
-              {availableStock > 0 ? `In stock (${availableStock} available)` : "Out of stock"}
+            <Badge tone={availableStock > 0 ? (availableStock <= 5 ? "gold" : "green") : "red"}>
+              {availableStock <= 0
+                ? "Sold out"
+                : availableStock <= 5
+                  ? `Only ${availableStock} left`
+                  : "In stock"}
             </Badge>
+            {availableStock > 0 && (
+              <span className="text-xs text-gray-500">
+                {availableStock <= 5 ? "Order soon — almost gone." : "Ships within 24 hours."}
+              </span>
+            )}
           </div>
 
           {styles.length > 0 && (
@@ -361,6 +375,28 @@ export function ProductDetailClient() {
           </div>
         </div>
       </div>
+
+      {related.length > 0 && (
+        <section className="mt-14 border-t border-gray-100 pt-10">
+          <div className="flex items-end justify-between gap-3">
+            <div>
+              <p className="eyebrow text-primary">Complete the look</p>
+              <h2 className="mt-1 font-heading text-2xl font-bold text-brand-text">You may also like</h2>
+            </div>
+            <Link
+              href={`/shop?category=${product.category_slug}`}
+              className="shrink-0 text-sm font-semibold text-primary hover:underline"
+            >
+              See all
+            </Link>
+          </div>
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+            {related.map((item) => (
+              <ProductCard key={item.id} product={item} />
+            ))}
+          </div>
+        </section>
+      )}
 
       <ReviewSection productId={product.id} />
     </div>

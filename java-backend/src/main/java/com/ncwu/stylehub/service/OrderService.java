@@ -56,10 +56,23 @@ public class OrderService {
     }
 
     @Transactional
-    public OrderOut create(long userId, OrderCreateRequest req) {
-        User user = em.find(User.class, userId);
+    public OrderOut create(Long userId, OrderCreateRequest req) {
+        User user = null;
+        String guestEmail = "";
+        if (userId != null) {
+            user = em.find(User.class, userId);
+            if (user == null) {
+                throw new ApiException(401, "Could not validate credentials");
+            }
+        } else {
+            guestEmail = req.guestEmail() == null ? "" : req.guestEmail().trim().toLowerCase();
+            if (!guestEmail.matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")) {
+                throw new ApiException(400, "A valid email address is required to check out as a guest");
+            }
+        }
         Order order = new Order();
         order.user = user;
+        order.guestEmail = guestEmail;
         order.shippingName = req.shippingName();
         order.shippingAddress = req.shippingAddress();
         order.shippingPhone = req.shippingPhone() != null ? req.shippingPhone() : "";
@@ -112,7 +125,30 @@ public class OrderService {
         order.total = Math.round((subtotal + shipping) * 100) / 100.0;
         order.updatedAt = order.createdAt;
         em.persist(order);
-        mailService.sendOrderConfirmation(user, order);
+        mailService.sendOrderConfirmation(contactEmail(order), order);
+        return toOut(order);
+    }
+
+    /** Where order notifications go: the account email, or the guest email for guest orders. */
+    private static String contactEmail(Order order) {
+        return order.user != null ? order.user.email : (order.guestEmail == null ? "" : order.guestEmail);
+    }
+
+    /**
+     * Public order lookup for guests: the order id plus the email used at checkout must match.
+     * Signed-in customers may also use it with their account email.
+     */
+    @Transactional(readOnly = true)
+    public OrderOut track(long orderId, String email) {
+        Order order = em.find(Order.class, orderId);
+        if (order == null) {
+            throw new ApiException(404, "Order not found");
+        }
+        String expected = contactEmail(order).trim().toLowerCase();
+        String supplied = email == null ? "" : email.trim().toLowerCase();
+        if (expected.isBlank() || !expected.equals(supplied)) {
+            throw new ApiException(404, "Order not found");
+        }
         return toOut(order);
     }
 
@@ -126,7 +162,7 @@ public class OrderService {
     @Transactional(readOnly = true)
     public OrderOut order(long userId, long orderId) {
         Order order = em.find(Order.class, orderId);
-        if (order == null || order.user.id != userId) {
+        if (order == null || order.user == null || order.user.id != userId) {
             throw new ApiException(404, "Order not found");
         }
         return toOut(order);
@@ -178,7 +214,7 @@ public class OrderService {
             if ("cancelled".equals(status) && !"cancelled".equals(previousStatus)) {
                 restoreStock(order);
             }
-            mailService.sendTrackingUpdate(order.user, order);
+            mailService.sendTrackingUpdate(contactEmail(order), order);
         }
         return toOut(order);
     }
@@ -190,7 +226,7 @@ public class OrderService {
     @Transactional
     public OrderOut cancel(long userId, long orderId) {
         Order order = em.find(Order.class, orderId);
-        if (order == null || order.user.id != userId) {
+        if (order == null || order.user == null || order.user.id != userId) {
             throw new ApiException(404, "Order not found");
         }
         if ("cancelled".equals(order.status)) {
@@ -202,7 +238,7 @@ public class OrderService {
         restoreStock(order);
         order.status = "cancelled";
         order.updatedAt = java.time.LocalDateTime.now(ZoneOffset.UTC);
-        mailService.sendOrderCancelled(order.user, order);
+        mailService.sendOrderCancelled(contactEmail(order), order);
         return toOut(order);
     }
 
@@ -319,10 +355,11 @@ public class OrderService {
                 .toList();
         double itemsSum = items.stream().mapToDouble(i -> i.unitPrice() * i.quantity()).sum();
         double shipping = Math.round((order.total - itemsSum) * 100) / 100.0;
-        return new OrderOut(order.id, order.user.id, order.status,
+        return new OrderOut(order.id, order.user != null ? order.user.id : null, order.status,
                 order.trackingNumber != null ? order.trackingNumber : "",
                 order.total, order.shippingName,
                 order.shippingAddress, order.shippingPhone, order.paymentMethod, order.createdAt, items,
-                shipping, order.updatedAt != null ? order.updatedAt : order.createdAt);
+                shipping, order.guestEmail != null ? order.guestEmail : "",
+                order.updatedAt != null ? order.updatedAt : order.createdAt);
     }
 }

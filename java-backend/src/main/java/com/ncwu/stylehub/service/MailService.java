@@ -64,13 +64,22 @@ public class MailService {
     }
 
     public void sendOrderConfirmation(User user, Order order) {
+        sendOrderConfirmation(user.email, order);
+    }
+
+    /** Guest checkout: the confirmation goes to the email typed at checkout. */
+    public void sendOrderConfirmation(String email, Order order) {
         MailTemplates.Mail mail = templates.orderConfirmation(order);
-        send(user.email, "Order #" + order.id + " confirmed | NCWU StyleHub", mail.html(), mail.text(), null);
+        send(email, "Order #" + order.id + " confirmed | NCWU StyleHub", mail.html(), mail.text(), null);
     }
 
     public void sendTrackingUpdate(User user, Order order) {
+        sendTrackingUpdate(user.email, order);
+    }
+
+    public void sendTrackingUpdate(String email, Order order) {
         MailTemplates.Mail mail = templates.trackingUpdate(order);
-        send(user.email, "Order #" + order.id + " update | NCWU StyleHub", mail.html(), mail.text(), null);
+        send(email, "Order #" + order.id + " update | NCWU StyleHub", mail.html(), mail.text(), null);
     }
 
     public void sendPasswordReset(User user, String rawToken) {
@@ -82,6 +91,11 @@ public class MailService {
     public void sendOrderCancelled(User user, Order order) {
         MailTemplates.Mail mail = templates.orderCancelled(order);
         send(user.email, "Order #" + order.id + " cancelled | NCWU StyleHub", mail.html(), mail.text(), null);
+    }
+
+    public void sendOrderCancelled(String email, Order order) {
+        MailTemplates.Mail mail = templates.orderCancelled(order);
+        send(email, "Order #" + order.id + " cancelled | NCWU StyleHub", mail.html(), mail.text(), null);
     }
 
     public void sendRefundRequested(RefundRequest refund) {
